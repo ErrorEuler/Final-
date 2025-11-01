@@ -118,9 +118,9 @@ acss-1-main
 │     ├─ auth
 │     │  ├─ forgot_password.php
 │     │  ├─ login.php
-│     │  ├─ register-step2.php
 │     │  ├─ register.php
-│     │  └─ reset_password.php
+│     │  ├─ reset_password.php
+│     │  └─ terms_modal.php
 │     ├─ chair
 │     │  ├─ classroom.php
 │     │  ├─ courses.php

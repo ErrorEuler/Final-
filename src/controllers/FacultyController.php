@@ -1149,5 +1149,4 @@ class FacultyController
         // Render the settings view
         require_once __DIR__ . '/../views/faculty/settings.php';
     }
-
 }
