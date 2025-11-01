@@ -1,22 +1,34 @@
 
 ```
-acss-1
+acss-1-main
 ├─ .env
+├─ backups
+│  ├─ backup_acss1_2025-10-31_15-21-15.sql.zip
+│  └─ backup_acss1_2025-10-31_15-57-27.sql.zip
+├─ cli
+│  └─ backup-database.php
 ├─ composer.json
 ├─ composer.lock
+├─ logs
+│  ├─ backup-2025-10.log
+│  └─ scheduler-backup.log
 ├─ package-lock.json
 ├─ package.json
 ├─ public
 │  ├─ assets
-│  │  ├─ img
 │  │  ├─ js
 │  │  │  ├─ curriculum.js
 │  │  │  ├─ generate_schedules.js
 │  │  │  ├─ manual_schedules.js
-│  │  │  ├─ schedule.js
-│  │  │  └─ schedule_management.js
+│  │  │  └─ schedule.js
 │  │  └─ logo
 │  │     ├─ college_logo
+│  │     │  ├─ college_5_1761146495.png
+│  │     │  ├─ college_7_1759400446.png
+│  │     │  ├─ college_7_1759451921.png
+│  │     │  ├─ college_7_1759453222.png
+│  │     │  ├─ college_7_1759632346.png
+│  │     │  └─ college_7_1759632357.png
 │  │     └─ main_logo
 │  │        ├─ campus.jpg
 │  │        └─ PRMSUlogo.png
@@ -27,6 +39,10 @@ acss-1
 │  │  └─ settings.css
 │  ├─ index.php
 │  └─ uploads
+│     ├─ bg_1761923201_6904d08167af9.png
+│     ├─ bg_1761923897_6904d3399e7ea.png
+│     ├─ logo_1761923325_6904d0fd66a56.png
+│     ├─ logo_1761923496_6904d1a86cbbf.png
 │     ├─ profiles
 │     │  ├─ profile_1_1755697812.png
 │     │  ├─ profile_1_1755697860.png
@@ -38,6 +54,7 @@ acss-1
 │        ├─ profile_1_1755867785.png
 │        ├─ profile_1_1756791244.png
 │        ├─ profile_1_1756792379.png
+│        ├─ profile_26_1759837327.png
 │        ├─ profile_2_1756793168.png
 │        ├─ profile_45_1758014886.png
 │        ├─ profile_65_1755868685.png
@@ -53,17 +70,20 @@ acss-1
 ├─ src
 │  ├─ api
 │  │  └─ load_data.php
+│  ├─ backups
+│  │  └─ auto_backup_acss1_2025-10-28_16-14-44.sql.zip
 │  ├─ config
 │  │  └─ Database.php
 │  ├─ controllers
 │  │  ├─ AdminController.php
 │  │  ├─ ApiController.php
 │  │  ├─ AuthController.php
-│  │  ├─ backupcodeforgeneratefunctions.txt
+│  │  ├─ BaseController.php
 │  │  ├─ ChairController.php
 │  │  ├─ DeanController.php
 │  │  ├─ DirectorController.php
 │  │  ├─ FacultyController.php
+│  │  ├─ PdfController.php
 │  │  └─ PublicController.php
 │  ├─ input.css
 │  ├─ middleware
@@ -72,19 +92,14 @@ acss-1
 │  │  ├─ ContentModel.php
 │  │  ├─ ScheduleModel.php
 │  │  └─ UserModel.php
-│  ├─ public
-│  │  └─ uploads
-│  │     ├─ colleges
-│  │     │  ├─ college_7_1756389443.png
-│  │     │  ├─ college_7_1758030305.png
-│  │     │  ├─ college_7_1758030382.png
-│  │     │  ├─ college_7_1758031121.png
-│  │     │  └─ college_7_1758031890.png
-│  │     └─ profiles
 │  ├─ services
 │  │  ├─ AuthService.php
+│  │  ├─ BackupSchedulerService.php
 │  │  ├─ EmailService.php
+│  │  ├─ PdfService.php
 │  │  └─ SchedulingService.php
+│  ├─ test
+│  │  └─ test-backup.php
 │  └─ views
 │     ├─ admin
 │     │  ├─ act_logs.php
@@ -92,6 +107,7 @@ acss-1
 │     │  ├─ colleges.php
 │     │  ├─ colleges_departments.php
 │     │  ├─ dashboard.php
+│     │  ├─ database-backup.php
 │     │  ├─ departments.php
 │     │  ├─ edit_user.php
 │     │  ├─ layout.php
@@ -106,59 +122,60 @@ acss-1
 │     │  ├─ register.php
 │     │  └─ reset_password.php
 │     ├─ chair
-│     │  ├─ backup_Schedulemanagementfile.txt
 │     │  ├─ classroom.php
 │     │  ├─ courses.php
 │     │  ├─ curriculum.php
 │     │  ├─ dashboard.php
+│     │  ├─ faculty-teaching-load.php
 │     │  ├─ faculty.php
 │     │  ├─ layout.php
 │     │  ├─ my_schedule.php
 │     │  ├─ profile.php
 │     │  ├─ schedule_history.php
 │     │  ├─ schedule_management.php
-│     │  └─ sections.php
+│     │  ├─ sections.php
+│     │  └─ settings.php
 │     ├─ dean
 │     │  ├─ activities.php
 │     │  ├─ classroom.php
 │     │  ├─ courses.php
 │     │  ├─ curriculum.php
 │     │  ├─ dashboard.php
+│     │  ├─ faculty-teaching-load.php
 │     │  ├─ faculty.php
 │     │  ├─ layout.php
+│     │  ├─ manage_departments.php
 │     │  ├─ manage_schedules.php
 │     │  ├─ profile.php
 │     │  ├─ schedule.php
 │     │  ├─ search.php
 │     │  └─ settings.php
 │     ├─ director
+│     │  ├─ all-teaching-load.php
 │     │  ├─ dashboard.php
 │     │  ├─ layout.php
 │     │  ├─ monitor.php
+│     │  ├─ pending-approvals.php
 │     │  ├─ profile.php
 │     │  ├─ schedule.php
-│     │  └─ schedule_deadline.php
+│     │  ├─ schedule_deadline.php
+│     │  └─ settings.php
 │     ├─ errors
 │     │  └─ 403.php
 │     ├─ faculty
 │     │  ├─ dashboard.php
 │     │  ├─ layout.php
 │     │  ├─ my_schedule.php
-│     │  └─ profile.php
-│     ├─ partials
-│     │  ├─ chair
-│     │  │  └─ sidebar.php
-│     │  ├─ css
-│     │  │  └─ custome.css
-│     │  └─ faculty
-│     ├─ public
-│     │  └─ home.php
-│     └─ vpaa
+│     │  ├─ profile.php
+│     │  └─ settings.php
+│     └─ public
+│        └─ home.php
+├─ storage
+│  └─ scheduler.json
 ├─ tailwind.config.js
 ├─ test_db.php
 └─ vendor
    ├─ autoload.php
-   ├─ bin
    ├─ composer
    │  ├─ autoload_classmap.php
    │  ├─ autoload_files.php
@@ -196,19 +213,275 @@ acss-1
    │  │     ├─ ReplaceResult.php
    │  │     └─ UnexpectedNullMatchException.php
    │  └─ platform_check.php
-   ├─ graham-campbell
-   │  └─ result-type
-   │     ├─ CHANGELOG.md
+   ├─ dompdf
+   │  ├─ dompdf
+   │  │  ├─ AUTHORS.md
+   │  │  ├─ composer.json
+   │  │  ├─ lib
+   │  │  │  ├─ Cpdf.php
+   │  │  │  ├─ fonts
+   │  │  │  │  ├─ Courier-Bold.afm
+   │  │  │  │  ├─ Courier-BoldOblique.afm
+   │  │  │  │  ├─ Courier-Oblique.afm
+   │  │  │  │  ├─ Courier.afm
+   │  │  │  │  ├─ DejaVuSans-Bold.ttf
+   │  │  │  │  ├─ DejaVuSans-Bold.ufm
+   │  │  │  │  ├─ DejaVuSans-BoldOblique.ttf
+   │  │  │  │  ├─ DejaVuSans-BoldOblique.ufm
+   │  │  │  │  ├─ DejaVuSans-Oblique.ttf
+   │  │  │  │  ├─ DejaVuSans-Oblique.ufm
+   │  │  │  │  ├─ DejaVuSans.ttf
+   │  │  │  │  ├─ DejaVuSans.ufm
+   │  │  │  │  ├─ DejaVuSansMono-Bold.ttf
+   │  │  │  │  ├─ DejaVuSansMono-Bold.ufm
+   │  │  │  │  ├─ DejaVuSansMono-BoldOblique.ttf
+   │  │  │  │  ├─ DejaVuSansMono-BoldOblique.ufm
+   │  │  │  │  ├─ DejaVuSansMono-Oblique.ttf
+   │  │  │  │  ├─ DejaVuSansMono-Oblique.ufm
+   │  │  │  │  ├─ DejaVuSansMono.ttf
+   │  │  │  │  ├─ DejaVuSansMono.ufm
+   │  │  │  │  ├─ DejaVuSerif-Bold.ttf
+   │  │  │  │  ├─ DejaVuSerif-Bold.ufm
+   │  │  │  │  ├─ DejaVuSerif-BoldItalic.ttf
+   │  │  │  │  ├─ DejaVuSerif-BoldItalic.ufm
+   │  │  │  │  ├─ DejaVuSerif-Italic.ttf
+   │  │  │  │  ├─ DejaVuSerif-Italic.ufm
+   │  │  │  │  ├─ DejaVuSerif.ttf
+   │  │  │  │  ├─ DejaVuSerif.ufm
+   │  │  │  │  ├─ Helvetica-Bold.afm
+   │  │  │  │  ├─ Helvetica-BoldOblique.afm
+   │  │  │  │  ├─ Helvetica-Oblique.afm
+   │  │  │  │  ├─ Helvetica.afm
+   │  │  │  │  ├─ installed-fonts.dist.json
+   │  │  │  │  ├─ mustRead.html
+   │  │  │  │  ├─ Symbol.afm
+   │  │  │  │  ├─ Times-Bold.afm
+   │  │  │  │  ├─ Times-BoldItalic.afm
+   │  │  │  │  ├─ Times-Italic.afm
+   │  │  │  │  ├─ Times-Roman.afm
+   │  │  │  │  └─ ZapfDingbats.afm
+   │  │  │  └─ res
+   │  │  │     ├─ broken_image.png
+   │  │  │     ├─ broken_image.svg
+   │  │  │     ├─ html.css
+   │  │  │     ├─ sRGB2014.icc
+   │  │  │     └─ sRGB2014.icc.LICENSE
+   │  │  ├─ LICENSE.LGPL
+   │  │  ├─ phpunit.xml
+   │  │  ├─ README.md
+   │  │  ├─ src
+   │  │  │  ├─ Adapter
+   │  │  │  │  ├─ CPDF.php
+   │  │  │  │  ├─ GD.php
+   │  │  │  │  └─ PDFLib.php
+   │  │  │  ├─ Canvas.php
+   │  │  │  ├─ CanvasFactory.php
+   │  │  │  ├─ Cellmap.php
+   │  │  │  ├─ Css
+   │  │  │  │  ├─ AttributeTranslator.php
+   │  │  │  │  ├─ Color.php
+   │  │  │  │  ├─ Content
+   │  │  │  │  │  ├─ Attr.php
+   │  │  │  │  │  ├─ CloseQuote.php
+   │  │  │  │  │  ├─ ContentPart.php
+   │  │  │  │  │  ├─ Counter.php
+   │  │  │  │  │  ├─ Counters.php
+   │  │  │  │  │  ├─ NoCloseQuote.php
+   │  │  │  │  │  ├─ NoOpenQuote.php
+   │  │  │  │  │  ├─ OpenQuote.php
+   │  │  │  │  │  ├─ StringPart.php
+   │  │  │  │  │  └─ Url.php
+   │  │  │  │  ├─ Style.php
+   │  │  │  │  └─ Stylesheet.php
+   │  │  │  ├─ Dompdf.php
+   │  │  │  ├─ Exception
+   │  │  │  │  └─ ImageException.php
+   │  │  │  ├─ Exception.php
+   │  │  │  ├─ FontMetrics.php
+   │  │  │  ├─ Frame
+   │  │  │  │  ├─ Factory.php
+   │  │  │  │  ├─ FrameListIterator.php
+   │  │  │  │  ├─ FrameTree.php
+   │  │  │  │  └─ FrameTreeIterator.php
+   │  │  │  ├─ Frame.php
+   │  │  │  ├─ FrameDecorator
+   │  │  │  │  ├─ AbstractFrameDecorator.php
+   │  │  │  │  ├─ Block.php
+   │  │  │  │  ├─ Image.php
+   │  │  │  │  ├─ Inline.php
+   │  │  │  │  ├─ ListBullet.php
+   │  │  │  │  ├─ ListBulletImage.php
+   │  │  │  │  ├─ NullFrameDecorator.php
+   │  │  │  │  ├─ Page.php
+   │  │  │  │  ├─ Table.php
+   │  │  │  │  ├─ TableCell.php
+   │  │  │  │  ├─ TableRow.php
+   │  │  │  │  ├─ TableRowGroup.php
+   │  │  │  │  └─ Text.php
+   │  │  │  ├─ FrameReflower
+   │  │  │  │  ├─ AbstractFrameReflower.php
+   │  │  │  │  ├─ Block.php
+   │  │  │  │  ├─ Image.php
+   │  │  │  │  ├─ Inline.php
+   │  │  │  │  ├─ ListBullet.php
+   │  │  │  │  ├─ NullFrameReflower.php
+   │  │  │  │  ├─ Page.php
+   │  │  │  │  ├─ Table.php
+   │  │  │  │  ├─ TableCell.php
+   │  │  │  │  ├─ TableRow.php
+   │  │  │  │  ├─ TableRowGroup.php
+   │  │  │  │  └─ Text.php
+   │  │  │  ├─ Helpers.php
+   │  │  │  ├─ Image
+   │  │  │  │  └─ Cache.php
+   │  │  │  ├─ JavascriptEmbedder.php
+   │  │  │  ├─ LineBox.php
+   │  │  │  ├─ Options.php
+   │  │  │  ├─ PhpEvaluator.php
+   │  │  │  ├─ Positioner
+   │  │  │  │  ├─ Absolute.php
+   │  │  │  │  ├─ AbstractPositioner.php
+   │  │  │  │  ├─ Block.php
+   │  │  │  │  ├─ Fixed.php
+   │  │  │  │  ├─ Inline.php
+   │  │  │  │  ├─ ListBullet.php
+   │  │  │  │  ├─ NullPositioner.php
+   │  │  │  │  ├─ TableCell.php
+   │  │  │  │  └─ TableRow.php
+   │  │  │  ├─ Renderer
+   │  │  │  │  ├─ AbstractRenderer.php
+   │  │  │  │  ├─ Block.php
+   │  │  │  │  ├─ Image.php
+   │  │  │  │  ├─ Inline.php
+   │  │  │  │  ├─ ListBullet.php
+   │  │  │  │  ├─ TableCell.php
+   │  │  │  │  ├─ TableRow.php
+   │  │  │  │  ├─ TableRowGroup.php
+   │  │  │  │  └─ Text.php
+   │  │  │  └─ Renderer.php
+   │  │  └─ VERSION
+   │  ├─ php-font-lib
+   │  │  ├─ AUTHORS.md
+   │  │  ├─ composer.json
+   │  │  ├─ LICENSE
+   │  │  ├─ maps
+   │  │  │  ├─ adobe-standard-encoding.map
+   │  │  │  ├─ cp1250.map
+   │  │  │  ├─ cp1251.map
+   │  │  │  ├─ cp1252.map
+   │  │  │  ├─ cp1253.map
+   │  │  │  ├─ cp1254.map
+   │  │  │  ├─ cp1255.map
+   │  │  │  ├─ cp1257.map
+   │  │  │  ├─ cp1258.map
+   │  │  │  ├─ cp874.map
+   │  │  │  ├─ iso-8859-1.map
+   │  │  │  ├─ iso-8859-11.map
+   │  │  │  ├─ iso-8859-15.map
+   │  │  │  ├─ iso-8859-16.map
+   │  │  │  ├─ iso-8859-2.map
+   │  │  │  ├─ iso-8859-4.map
+   │  │  │  ├─ iso-8859-5.map
+   │  │  │  ├─ iso-8859-7.map
+   │  │  │  ├─ iso-8859-9.map
+   │  │  │  ├─ koi8-r.map
+   │  │  │  └─ koi8-u.map
+   │  │  ├─ README.md
+   │  │  └─ src
+   │  │     └─ FontLib
+   │  │        ├─ AdobeFontMetrics.php
+   │  │        ├─ BinaryStream.php
+   │  │        ├─ EncodingMap.php
+   │  │        ├─ EOT
+   │  │        │  ├─ File.php
+   │  │        │  └─ Header.php
+   │  │        ├─ Exception
+   │  │        │  └─ FontNotFoundException.php
+   │  │        ├─ Font.php
+   │  │        ├─ Glyph
+   │  │        │  ├─ Outline.php
+   │  │        │  ├─ OutlineComponent.php
+   │  │        │  ├─ OutlineComposite.php
+   │  │        │  └─ OutlineSimple.php
+   │  │        ├─ Header.php
+   │  │        ├─ OpenType
+   │  │        │  ├─ File.php
+   │  │        │  └─ TableDirectoryEntry.php
+   │  │        ├─ Table
+   │  │        │  ├─ DirectoryEntry.php
+   │  │        │  ├─ Table.php
+   │  │        │  └─ Type
+   │  │        │     ├─ cmap.php
+   │  │        │     ├─ cvt.php
+   │  │        │     ├─ fpgm.php
+   │  │        │     ├─ glyf.php
+   │  │        │     ├─ head.php
+   │  │        │     ├─ hhea.php
+   │  │        │     ├─ hmtx.php
+   │  │        │     ├─ kern.php
+   │  │        │     ├─ loca.php
+   │  │        │     ├─ maxp.php
+   │  │        │     ├─ name.php
+   │  │        │     ├─ nameRecord.php
+   │  │        │     ├─ os2.php
+   │  │        │     ├─ post.php
+   │  │        │     └─ prep.php
+   │  │        ├─ TrueType
+   │  │        │  ├─ Collection.php
+   │  │        │  ├─ File.php
+   │  │        │  ├─ Header.php
+   │  │        │  └─ TableDirectoryEntry.php
+   │  │        └─ WOFF
+   │  │           ├─ File.php
+   │  │           ├─ Header.php
+   │  │           └─ TableDirectoryEntry.php
+   │  └─ php-svg-lib
+   │     ├─ AUTHORS.md
    │     ├─ composer.json
    │     ├─ LICENSE
-   │     ├─ phpunit.xml.dist
    │     ├─ README.md
-   │     ├─ src
-   │     │  ├─ Error.php
-   │     │  ├─ Result.php
-   │     │  └─ Success.php
-   │     └─ tests
-   │        └─ ResultTest.php
+   │     └─ src
+   │        └─ Svg
+   │           ├─ CssLength.php
+   │           ├─ DefaultStyle.php
+   │           ├─ Document.php
+   │           ├─ Gradient
+   │           │  └─ Stop.php
+   │           ├─ Style.php
+   │           ├─ Surface
+   │           │  ├─ CPdf.php
+   │           │  ├─ SurfaceCpdf.php
+   │           │  ├─ SurfaceInterface.php
+   │           │  └─ SurfacePDFLib.php
+   │           └─ Tag
+   │              ├─ AbstractTag.php
+   │              ├─ Anchor.php
+   │              ├─ Circle.php
+   │              ├─ ClipPath.php
+   │              ├─ Ellipse.php
+   │              ├─ Group.php
+   │              ├─ Image.php
+   │              ├─ Line.php
+   │              ├─ LinearGradient.php
+   │              ├─ Path.php
+   │              ├─ Polygon.php
+   │              ├─ Polyline.php
+   │              ├─ RadialGradient.php
+   │              ├─ Rect.php
+   │              ├─ Shape.php
+   │              ├─ Stop.php
+   │              ├─ StyleTag.php
+   │              ├─ Symbol.php
+   │              ├─ Text.php
+   │              └─ UseTag.php
+   ├─ graham-campbell
+   │  └─ result-type
+   │     ├─ composer.json
+   │     ├─ LICENSE
+   │     └─ src
+   │        ├─ Error.php
+   │        ├─ Result.php
+   │        └─ Success.php
    ├─ maennchen
    │  └─ zipstream-php
    │     ├─ .editorconfig
@@ -331,6 +604,42 @@ acss-1
    │     ├─ license.md
    │     ├─ phpstan.neon
    │     └─ README.md
+   ├─ masterminds
+   │  └─ html5
+   │     ├─ bin
+   │     │  └─ entities.php
+   │     ├─ composer.json
+   │     ├─ CREDITS
+   │     ├─ LICENSE.txt
+   │     ├─ README.md
+   │     ├─ RELEASE.md
+   │     ├─ src
+   │     │  ├─ HTML5
+   │     │  │  ├─ Elements.php
+   │     │  │  ├─ Entities.php
+   │     │  │  ├─ Exception.php
+   │     │  │  ├─ InstructionProcessor.php
+   │     │  │  ├─ Parser
+   │     │  │  │  ├─ CharacterReference.php
+   │     │  │  │  ├─ DOMTreeBuilder.php
+   │     │  │  │  ├─ EventHandler.php
+   │     │  │  │  ├─ FileInputStream.php
+   │     │  │  │  ├─ InputStream.php
+   │     │  │  │  ├─ ParseError.php
+   │     │  │  │  ├─ README.md
+   │     │  │  │  ├─ Scanner.php
+   │     │  │  │  ├─ StringInputStream.php
+   │     │  │  │  ├─ Tokenizer.php
+   │     │  │  │  ├─ TreeBuildingRules.php
+   │     │  │  │  └─ UTF8Utils.php
+   │     │  │  └─ Serializer
+   │     │  │     ├─ HTML5Entities.php
+   │     │  │     ├─ OutputRules.php
+   │     │  │     ├─ README.md
+   │     │  │     ├─ RulesInterface.php
+   │     │  │     └─ Traverser.php
+   │     │  └─ HTML5.php
+   │     └─ UPGRADING.md
    ├─ mpdf
    │  ├─ mpdf
    │  │  ├─ CHANGELOG.md
@@ -1687,33 +1996,12 @@ acss-1
    │  └─ phpoption
    │     ├─ composer.json
    │     ├─ LICENSE
-   │     ├─ Makefile
-   │     ├─ phpstan-baseline.neon
-   │     ├─ phpstan.neon.dist
-   │     ├─ phpunit.xml.dist
-   │     ├─ psalm-baseline.xml
-   │     ├─ psalm.xml
-   │     ├─ README.md
-   │     ├─ src
-   │     │  └─ PhpOption
-   │     │     ├─ LazyOption.php
-   │     │     ├─ None.php
-   │     │     ├─ Option.php
-   │     │     └─ Some.php
-   │     ├─ tests
-   │     │  ├─ bootstrap.php
-   │     │  └─ PhpOption
-   │     │     └─ Tests
-   │     │        ├─ EnsureTest.php
-   │     │        ├─ LazyOptionTest.php
-   │     │        ├─ NoneTest.php
-   │     │        ├─ OptionTest.php
-   │     │        └─ SomeTest.php
-   │     └─ vendor-bin
-   │        ├─ phpstan
-   │        │  └─ composer.json
-   │        └─ psalm
-   │           └─ composer.json
+   │     └─ src
+   │        └─ PhpOption
+   │           ├─ LazyOption.php
+   │           ├─ None.php
+   │           ├─ Option.php
+   │           └─ Some.php
    ├─ psr
    │  ├─ http-client
    │  │  ├─ CHANGELOG.md
@@ -1774,396 +2062,132 @@ acss-1
    │        ├─ CacheException.php
    │        ├─ CacheInterface.php
    │        └─ InvalidArgumentException.php
+   ├─ sabberworm
+   │  └─ php-css-parser
+   │     ├─ CHANGELOG.md
+   │     ├─ composer.json
+   │     ├─ LICENSE
+   │     ├─ README.md
+   │     └─ src
+   │        ├─ Comment
+   │        │  ├─ Comment.php
+   │        │  └─ Commentable.php
+   │        ├─ CSSElement.php
+   │        ├─ CSSList
+   │        │  ├─ AtRuleBlockList.php
+   │        │  ├─ CSSBlockList.php
+   │        │  ├─ CSSList.php
+   │        │  ├─ Document.php
+   │        │  └─ KeyFrame.php
+   │        ├─ OutputFormat.php
+   │        ├─ OutputFormatter.php
+   │        ├─ Parser.php
+   │        ├─ Parsing
+   │        │  ├─ Anchor.php
+   │        │  ├─ OutputException.php
+   │        │  ├─ ParserState.php
+   │        │  ├─ SourceException.php
+   │        │  ├─ UnexpectedEOFException.php
+   │        │  └─ UnexpectedTokenException.php
+   │        ├─ Position
+   │        │  ├─ Position.php
+   │        │  └─ Positionable.php
+   │        ├─ Property
+   │        │  ├─ AtRule.php
+   │        │  ├─ Charset.php
+   │        │  ├─ CSSNamespace.php
+   │        │  ├─ Import.php
+   │        │  ├─ KeyframeSelector.php
+   │        │  └─ Selector.php
+   │        ├─ Renderable.php
+   │        ├─ Rule
+   │        │  └─ Rule.php
+   │        ├─ RuleSet
+   │        │  ├─ AtRuleSet.php
+   │        │  ├─ DeclarationBlock.php
+   │        │  └─ RuleSet.php
+   │        ├─ Settings.php
+   │        └─ Value
+   │           ├─ CalcFunction.php
+   │           ├─ CalcRuleValueList.php
+   │           ├─ Color.php
+   │           ├─ CSSFunction.php
+   │           ├─ CSSString.php
+   │           ├─ LineName.php
+   │           ├─ PrimitiveValue.php
+   │           ├─ RuleValueList.php
+   │           ├─ Size.php
+   │           ├─ URL.php
+   │           ├─ Value.php
+   │           └─ ValueList.php
    ├─ setasign
    │  ├─ fpdi
    │  │  ├─ composer.json
-   │  │  ├─ composer.lock
    │  │  ├─ LICENSE.txt
-   │  │  ├─ local-tests
-   │  │  │  ├─ alpha-test.php
-   │  │  │  ├─ assets
-   │  │  │  │  └─ pdfdoc-encoding.json
-   │  │  │  ├─ concatenate.php
-   │  │  │  ├─ filelist.php
-   │  │  │  ├─ get-info.php
-   │  │  │  ├─ import-layers.php
-   │  │  │  ├─ memory.php
-   │  │  │  ├─ page-in-template.php
-   │  │  │  ├─ simple-v1.php
-   │  │  │  ├─ simple.php
-   │  │  │  └─ tfpdf.php
-   │  │  ├─ phpcs.xml
-   │  │  ├─ phpstan.neon
-   │  │  ├─ phpunit.xml
    │  │  ├─ README.md
-   │  │  ├─ scratches
-   │  │  │  └─ ArrayVsObject.php
    │  │  ├─ SECURITY.md
-   │  │  ├─ src
-   │  │  │  ├─ autoload.php
-   │  │  │  ├─ FpdfTpl.php
-   │  │  │  ├─ FpdfTplTrait.php
-   │  │  │  ├─ FpdfTrait.php
-   │  │  │  ├─ Fpdi.php
-   │  │  │  ├─ FpdiException.php
-   │  │  │  ├─ FpdiTrait.php
-   │  │  │  ├─ GraphicsState.php
-   │  │  │  ├─ Math
-   │  │  │  │  ├─ Matrix.php
-   │  │  │  │  └─ Vector.php
-   │  │  │  ├─ PdfParser
-   │  │  │  │  ├─ CrossReference
-   │  │  │  │  │  ├─ AbstractReader.php
-   │  │  │  │  │  ├─ CrossReference.php
-   │  │  │  │  │  ├─ CrossReferenceException.php
-   │  │  │  │  │  ├─ FixedReader.php
-   │  │  │  │  │  ├─ LineReader.php
-   │  │  │  │  │  └─ ReaderInterface.php
-   │  │  │  │  ├─ Filter
-   │  │  │  │  │  ├─ Ascii85.php
-   │  │  │  │  │  ├─ Ascii85Exception.php
-   │  │  │  │  │  ├─ AsciiHex.php
-   │  │  │  │  │  ├─ FilterException.php
-   │  │  │  │  │  ├─ FilterInterface.php
-   │  │  │  │  │  ├─ Flate.php
-   │  │  │  │  │  ├─ FlateException.php
-   │  │  │  │  │  ├─ Lzw.php
-   │  │  │  │  │  └─ LzwException.php
-   │  │  │  │  ├─ PdfParser.php
-   │  │  │  │  ├─ PdfParserException.php
-   │  │  │  │  ├─ StreamReader.php
-   │  │  │  │  ├─ Tokenizer.php
-   │  │  │  │  └─ Type
-   │  │  │  │     ├─ PdfArray.php
-   │  │  │  │     ├─ PdfBoolean.php
-   │  │  │  │     ├─ PdfDictionary.php
-   │  │  │  │     ├─ PdfHexString.php
-   │  │  │  │     ├─ PdfIndirectObject.php
-   │  │  │  │     ├─ PdfIndirectObjectReference.php
-   │  │  │  │     ├─ PdfName.php
-   │  │  │  │     ├─ PdfNull.php
-   │  │  │  │     ├─ PdfNumeric.php
-   │  │  │  │     ├─ PdfStream.php
-   │  │  │  │     ├─ PdfString.php
-   │  │  │  │     ├─ PdfToken.php
-   │  │  │  │     ├─ PdfType.php
-   │  │  │  │     └─ PdfTypeException.php
-   │  │  │  ├─ PdfReader
-   │  │  │  │  ├─ DataStructure
-   │  │  │  │  │  └─ Rectangle.php
-   │  │  │  │  ├─ Page.php
-   │  │  │  │  ├─ PageBoundaries.php
-   │  │  │  │  ├─ PdfReader.php
-   │  │  │  │  └─ PdfReaderException.php
-   │  │  │  ├─ Tcpdf
-   │  │  │  │  └─ Fpdi.php
-   │  │  │  ├─ TcpdfFpdi.php
-   │  │  │  └─ Tfpdf
-   │  │  │     ├─ FpdfTpl.php
-   │  │  │     └─ Fpdi.php
-   │  │  └─ tests
-   │  │     ├─ bootstrap.php
-   │  │     ├─ functional
-   │  │     │  ├─ FpdfTplTest.php
-   │  │     │  ├─ FpdiTest.php
-   │  │     │  ├─ FpdiTraitTest.php
-   │  │     │  ├─ FpdiTraitTestClass.php
-   │  │     │  ├─ LinkHandling
-   │  │     │  │  ├─ AbstractTest.php
-   │  │     │  │  ├─ FpdiTest.php
-   │  │     │  │  ├─ TcpdfTest.php
-   │  │     │  │  └─ TfpdfTest.php
-   │  │     │  ├─ PdfParser
-   │  │     │  │  ├─ CrossReference
-   │  │     │  │  │  ├─ CrossReferenceTest.php
-   │  │     │  │  │  ├─ FixedReaderTest.php
-   │  │     │  │  │  └─ LineReaderTest.php
-   │  │     │  │  ├─ Filter
-   │  │     │  │  │  ├─ Ascii85Test.php
-   │  │     │  │  │  ├─ AsciiHexTest.php
-   │  │     │  │  │  ├─ FlateTest.php
-   │  │     │  │  │  ├─ LzwTest.php
-   │  │     │  │  │  └─ _files
-   │  │     │  │  │     └─ Flate
-   │  │     │  │  │        ├─ special-decoded.bin
-   │  │     │  │  │        └─ special.bin
-   │  │     │  │  ├─ PdfParserTest.php
-   │  │     │  │  ├─ TokenizerTest.php
-   │  │     │  │  └─ Type
-   │  │     │  │     ├─ data
-   │  │     │  │     │  └─ streams
-   │  │     │  │     │     └─ Boombastic-Box.pdf
-   │  │     │  │     │        └─ 11-0-R.dump
-   │  │     │  │     ├─ PdfArrayTest.php
-   │  │     │  │     ├─ PdfBooleanTest.php
-   │  │     │  │     ├─ PdfDictionaryTest.php
-   │  │     │  │     ├─ PdfHexStringTest.php
-   │  │     │  │     ├─ PdfIndirectObjectTest.php
-   │  │     │  │     ├─ PdfNameTest.php
-   │  │     │  │     ├─ PdfStreamTest.php
-   │  │     │  │     └─ PdfStringTest.php
-   │  │     │  ├─ PdfReader
-   │  │     │  │  ├─ PageTest.php
-   │  │     │  │  └─ PdfReaderTest.php
-   │  │     │  ├─ PdfTypeDumper.php
-   │  │     │  ├─ ReleaseCycledReferencesTest.php
-   │  │     │  ├─ Tcpdf
-   │  │     │  │  └─ FpdiTest.php
-   │  │     │  └─ Tfpdf
-   │  │     │     └─ FpdiTest.php
-   │  │     ├─ unit
-   │  │     │  ├─ FpdfTplTest.php
-   │  │     │  ├─ FpdiTest.php
-   │  │     │  ├─ FpdiTraitTest.php
-   │  │     │  ├─ PdfParser
-   │  │     │  │  ├─ CrossReference
-   │  │     │  │  │  └─ CrossReferenceTest.php
-   │  │     │  │  ├─ DummyFaultyStreamWrapper.php
-   │  │     │  │  ├─ PdfParserTest.php
-   │  │     │  │  ├─ StreamReaderTest.php
-   │  │     │  │  ├─ Type
-   │  │     │  │  │  ├─ PdfArrayTest.php
-   │  │     │  │  │  ├─ PdfBooleanTest.php
-   │  │     │  │  │  ├─ PdfDictionaryTest.php
-   │  │     │  │  │  ├─ PdfHexStringTest.php
-   │  │     │  │  │  ├─ PdfIndirectObjectReferenceTest.php
-   │  │     │  │  │  ├─ PdfIndirectObjectTest.php
-   │  │     │  │  │  ├─ PdfNameTest.php
-   │  │     │  │  │  ├─ PdfNumericTest.php
-   │  │     │  │  │  ├─ PdfStreamTest.php
-   │  │     │  │  │  ├─ PdfStringTest.php
-   │  │     │  │  │  ├─ PdfTokenTest.php
-   │  │     │  │  │  └─ PdfTypeTest.php
-   │  │     │  │  └─ _files
-   │  │     │  │     └─ streamReader.txt
-   │  │     │  ├─ PdfReader
-   │  │     │  │  ├─ DataStructure
-   │  │     │  │  │  └─ RectangleTest.php
-   │  │     │  │  ├─ PageBoundariesTest.php
-   │  │     │  │  └─ PageTest.php
-   │  │     │  ├─ Tcpdf
-   │  │     │  │  └─ FpdiTest.php
-   │  │     │  └─ Tfpdf
-   │  │     │     └─ FpdiTest.php
-   │  │     ├─ visual
-   │  │     │  ├─ Alpha
-   │  │     │  │  ├─ AlphaPdf.php
-   │  │     │  │  ├─ AlphaTest
-   │  │     │  │  │  └─ 0
-   │  │     │  │  │     └─ original
-   │  │     │  │  │        └─ result.pdf
-   │  │     │  │  └─ AlphaTest.php
-   │  │     │  ├─ ConcatTest
-   │  │     │  │  ├─ 0
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ boxes
-   │  │     │  │  │  ├─ All2
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ [-1000 -1000 -500 -500]
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ [1000 500 -1000 -500]
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  └─ [1000 500 -1000 -500]-R90
-   │  │     │  │  │     └─ original
-   │  │     │  │  │        └─ result.pdf
-   │  │     │  │  ├─ flate-and-hex
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ rotated
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  └─ specials
-   │  │     │  │     └─ 0 0 R
-   │  │     │  │        └─ original
-   │  │     │  │           └─ result.pdf
-   │  │     │  ├─ ConcatTest.php
-   │  │     │  ├─ FpdfTplTest
-   │  │     │  │  ├─ adjustPageSize
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ colorHandlingA
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ colorHandlingB
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ fontHandlingA
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ fontHandlingB
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ templateInTemplate
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ templateInTemplateMm
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  └─ underlineHandling
-   │  │     │  │     └─ original
-   │  │     │  │        └─ result.pdf
-   │  │     │  ├─ FpdfTplTest.php
-   │  │     │  ├─ FpdiTest
-   │  │     │  │  ├─ importedPageInTemplateMm1
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ importedPageInTemplateMm2
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  ├─ importedPageInTemplatePt1
-   │  │     │  │  │  └─ original
-   │  │     │  │  │     └─ result.pdf
-   │  │     │  │  └─ importedPageInTemplatePt2
-   │  │     │  │     └─ original
-   │  │     │  │        └─ result.pdf
-   │  │     │  ├─ FpdiTest.php
-   │  │     │  ├─ Tcpdf
-   │  │     │  │  └─ ConcatTest.php
-   │  │     │  ├─ Tfpdf
-   │  │     │  │  ├─ ConcatTest.php
-   │  │     │  │  ├─ FpdfTplTest
-   │  │     │  │  │  ├─ adjustPageSize
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ colorHandlingA
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ colorHandlingB
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ fontHandlingA
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ fontHandlingB
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ templateInTemplate
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ templateInTemplateMm
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  └─ underlineHandling
-   │  │     │  │  │     └─ original
-   │  │     │  │  │        └─ result.pdf
-   │  │     │  │  ├─ FpdfTplTest.php
-   │  │     │  │  ├─ FpdiTest
-   │  │     │  │  │  ├─ importedPageInTemplateMm1
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ importedPageInTemplateMm2
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  ├─ importedPageInTemplatePt1
-   │  │     │  │  │  │  └─ original
-   │  │     │  │  │  │     └─ result.pdf
-   │  │     │  │  │  └─ importedPageInTemplatePt2
-   │  │     │  │  │     └─ original
-   │  │     │  │  │        └─ result.pdf
-   │  │     │  │  └─ FpdiTest.php
-   │  │     │  └─ VisualTestCase.php
-   │  │     └─ _files
-   │  │        ├─ images
-   │  │        │  ├─ jpeg.jpg
-   │  │        │  └─ png-8.png
-   │  │        └─ pdfs
-   │  │           ├─ 1000.pdf
-   │  │           ├─ 10000.pdf
-   │  │           ├─ 10000_with-tree.pdf
-   │  │           ├─ Boombastic-Box.pdf
-   │  │           ├─ boxes
-   │  │           │  ├─ All.pdf
-   │  │           │  ├─ All2.pdf
-   │  │           │  ├─ [-100 -100 1000 1000].pdf
-   │  │           │  ├─ [-1000 -1000 -500 -500].pdf
-   │  │           │  ├─ [-200 -100 1000 500].pdf
-   │  │           │  ├─ [1000 500 -1000 -500]-R-90.pdf
-   │  │           │  ├─ [1000 500 -1000 -500]-R90.pdf
-   │  │           │  └─ [1000 500 -1000 -500].pdf
-   │  │           ├─ compressed-xref.pdf
-   │  │           ├─ encrypted
-   │  │           │  ├─ AES256-R6-u=user-o=owner.pdf
-   │  │           │  └─ ex37.pdf
-   │  │           ├─ Example-PDF-2.pdf
-   │  │           ├─ Fantastic-Speaker.pdf
-   │  │           ├─ filters
-   │  │           │  ├─ hex
-   │  │           │  │  └─ hex.pdf
-   │  │           │  ├─ lzw
-   │  │           │  │  └─ 999998.pdf
-   │  │           │  └─ multiple
-   │  │           │     └─ flate-and-hex.pdf
-   │  │           ├─ HybridFile.pdf
-   │  │           ├─ layers
-   │  │           │  ├─ rect+circle+polygon.pdf
-   │  │           │  └─ rect+circle+triangle.pdf
-   │  │           ├─ links
-   │  │           │  ├─ annotations-with-invalid-references.pdf
-   │  │           │  ├─ boxes-rotated.pdf
-   │  │           │  ├─ boxes.pdf
-   │  │           │  ├─ first_file.pdf
-   │  │           │  ├─ invalid-annots-reference.pdf
-   │  │           │  ├─ links-with-indirect-references.pdf
-   │  │           │  ├─ links.pdf
-   │  │           │  ├─ rotated-pages.pdf
-   │  │           │  ├─ tuto6.pdf
-   │  │           │  ├─ update-links.pdf.php
-   │  │           │  ├─ [-100 -100 1000 1000].pdf
-   │  │           │  ├─ [-1000 -1000 -500 -500].pdf
-   │  │           │  ├─ [-200 -100 1000 500].pdf
-   │  │           │  ├─ [1000 500 -1000 -500]-R-90.pdf
-   │  │           │  ├─ [1000 500 -1000 -500]-R90.pdf
-   │  │           │  └─ [1000 500 -1000 -500].pdf
-   │  │           ├─ Noisy-Tube.pdf
-   │  │           ├─ normal-xref.pdf
-   │  │           ├─ PDF-complex-structure.pdf
-   │  │           ├─ ReferencesToInvalidObjects.pdf
-   │  │           ├─ rotated
-   │  │           │  ├─ -180.pdf
-   │  │           │  ├─ -270.pdf
-   │  │           │  ├─ -360.pdf
-   │  │           │  ├─ -450.pdf
-   │  │           │  ├─ -90.pdf
-   │  │           │  ├─ 180.pdf
-   │  │           │  ├─ 270.pdf
-   │  │           │  ├─ 360.pdf
-   │  │           │  ├─ 450.pdf
-   │  │           │  ├─ 90.pdf
-   │  │           │  └─ all.pdf
-   │  │           ├─ specials
-   │  │           │  ├─ 0 0 R
-   │  │           │  │  ├─ template_pracovny_prikaz7-ooo-a.pdf
-   │  │           │  │  └─ template_pracovny_prikaz7-ooo-a.txt
-   │  │           │  ├─ bytes-before-file-header
-   │  │           │  │  └─ Fantastic-Speaker-bytes-before-fileheader.pdf
-   │  │           │  ├─ ContentsArrayWithNoStream.pdf
-   │  │           │  ├─ ContentsArrayWithReferenceToNotExistingObject.pdf
-   │  │           │  ├─ ContentsWithReferenceToNotExistingObject.pdf
-   │  │           │  ├─ invalid-type-at-object-offset.pdf
-   │  │           │  ├─ NoContentsEntry.pdf
-   │  │           │  └─ page-trees
-   │  │           │     ├─ PageTree.pdf
-   │  │           │     ├─ PageTree2.pdf
-   │  │           │     ├─ PageTreeWithEmptyKids.pdf
-   │  │           │     ├─ PageTreeWithEmptyKids2.pdf
-   │  │           │     ├─ PageTreeWithEmptyKids3.pdf
-   │  │           │     └─ PageTreeWithInvalidTypeAndMisslLeadingCount.pdf
-   │  │           ├─ stamps
-   │  │           │  ├─ ENU
-   │  │           │  │  ├─ SignHere.pdf
-   │  │           │  │  ├─ Standard.pdf
-   │  │           │  │  └─ StandardBusiness.pdf
-   │  │           │  └─ INFO.txt
-   │  │           ├─ tektown
-   │  │           │  ├─ Letterhead.pdf
-   │  │           │  └─ Logo.pdf
-   │  │           ├─ transparency
-   │  │           │  └─ ex74.pdf
-   │  │           └─ Word2010.pdf
+   │  │  └─ src
+   │  │     ├─ autoload.php
+   │  │     ├─ FpdfTpl.php
+   │  │     ├─ FpdfTplTrait.php
+   │  │     ├─ FpdfTrait.php
+   │  │     ├─ Fpdi.php
+   │  │     ├─ FpdiException.php
+   │  │     ├─ FpdiTrait.php
+   │  │     ├─ GraphicsState.php
+   │  │     ├─ Math
+   │  │     │  ├─ Matrix.php
+   │  │     │  └─ Vector.php
+   │  │     ├─ PdfParser
+   │  │     │  ├─ CrossReference
+   │  │     │  │  ├─ AbstractReader.php
+   │  │     │  │  ├─ CrossReference.php
+   │  │     │  │  ├─ CrossReferenceException.php
+   │  │     │  │  ├─ FixedReader.php
+   │  │     │  │  ├─ LineReader.php
+   │  │     │  │  └─ ReaderInterface.php
+   │  │     │  ├─ Filter
+   │  │     │  │  ├─ Ascii85.php
+   │  │     │  │  ├─ Ascii85Exception.php
+   │  │     │  │  ├─ AsciiHex.php
+   │  │     │  │  ├─ FilterException.php
+   │  │     │  │  ├─ FilterInterface.php
+   │  │     │  │  ├─ Flate.php
+   │  │     │  │  ├─ FlateException.php
+   │  │     │  │  ├─ Lzw.php
+   │  │     │  │  └─ LzwException.php
+   │  │     │  ├─ PdfParser.php
+   │  │     │  ├─ PdfParserException.php
+   │  │     │  ├─ StreamReader.php
+   │  │     │  ├─ Tokenizer.php
+   │  │     │  └─ Type
+   │  │     │     ├─ PdfArray.php
+   │  │     │     ├─ PdfBoolean.php
+   │  │     │     ├─ PdfDictionary.php
+   │  │     │     ├─ PdfHexString.php
+   │  │     │     ├─ PdfIndirectObject.php
+   │  │     │     ├─ PdfIndirectObjectReference.php
+   │  │     │     ├─ PdfName.php
+   │  │     │     ├─ PdfNull.php
+   │  │     │     ├─ PdfNumeric.php
+   │  │     │     ├─ PdfStream.php
+   │  │     │     ├─ PdfString.php
+   │  │     │     ├─ PdfToken.php
+   │  │     │     ├─ PdfType.php
+   │  │     │     └─ PdfTypeException.php
+   │  │     ├─ PdfReader
+   │  │     │  ├─ DataStructure
+   │  │     │  │  └─ Rectangle.php
+   │  │     │  ├─ Page.php
+   │  │     │  ├─ PageBoundaries.php
+   │  │     │  ├─ PdfReader.php
+   │  │     │  └─ PdfReaderException.php
+   │  │     ├─ Tcpdf
+   │  │     │  └─ Fpdi.php
+   │  │     ├─ TcpdfFpdi.php
+   │  │     └─ Tfpdf
+   │  │        ├─ FpdfTpl.php
+   │  │        └─ Fpdi.php
    │  └─ fpdi-tcpdf
    │     ├─ composer.json
    │     ├─ LICENSE.txt
@@ -2209,173 +2233,6 @@ acss-1
    │     ├─ composer.json
    │     ├─ config
    │     │  └─ tcpdf_config.php
-   │     ├─ examples
-   │     │  ├─ barcodes
-   │     │  │  ├─ example_1d_html.php
-   │     │  │  ├─ example_1d_png.php
-   │     │  │  ├─ example_1d_svg.php
-   │     │  │  ├─ example_1d_svgi.php
-   │     │  │  ├─ example_2d_datamatrix_html.php
-   │     │  │  ├─ example_2d_datamatrix_png.php
-   │     │  │  ├─ example_2d_datamatrix_svg.php
-   │     │  │  ├─ example_2d_datamatrix_svgi.php
-   │     │  │  ├─ example_2d_pdf417_html.php
-   │     │  │  ├─ example_2d_pdf417_png.php
-   │     │  │  ├─ example_2d_pdf417_svg.php
-   │     │  │  ├─ example_2d_pdf417_svgi.php
-   │     │  │  ├─ example_2d_qrcode_html.php
-   │     │  │  ├─ example_2d_qrcode_png.php
-   │     │  │  ├─ example_2d_qrcode_svg.php
-   │     │  │  ├─ example_2d_qrcode_svgi.php
-   │     │  │  ├─ tcpdf_barcodes_1d_include.php
-   │     │  │  └─ tcpdf_barcodes_2d_include.php
-   │     │  ├─ config
-   │     │  │  └─ tcpdf_config_alt.php
-   │     │  ├─ data
-   │     │  │  ├─ cert
-   │     │  │  │  ├─ tcpdf.crt
-   │     │  │  │  ├─ tcpdf.fdf
-   │     │  │  │  └─ tcpdf.p12
-   │     │  │  ├─ chapter_demo_1.txt
-   │     │  │  ├─ chapter_demo_2.txt
-   │     │  │  ├─ table_data_demo.txt
-   │     │  │  └─ utf8test.txt
-   │     │  ├─ example_001.php
-   │     │  ├─ example_002.php
-   │     │  ├─ example_003.php
-   │     │  ├─ example_004.php
-   │     │  ├─ example_005.php
-   │     │  ├─ example_006.php
-   │     │  ├─ example_007.php
-   │     │  ├─ example_008.php
-   │     │  ├─ example_009.php
-   │     │  ├─ example_010.php
-   │     │  ├─ example_011.php
-   │     │  ├─ example_012.pdf
-   │     │  ├─ example_012.php
-   │     │  ├─ example_013.php
-   │     │  ├─ example_014.php
-   │     │  ├─ example_015.php
-   │     │  ├─ example_016.php
-   │     │  ├─ example_017.php
-   │     │  ├─ example_018.php
-   │     │  ├─ example_019.php
-   │     │  ├─ example_020.php
-   │     │  ├─ example_021.php
-   │     │  ├─ example_022.php
-   │     │  ├─ example_023.php
-   │     │  ├─ example_024.php
-   │     │  ├─ example_025.php
-   │     │  ├─ example_026.php
-   │     │  ├─ example_027.php
-   │     │  ├─ example_028.php
-   │     │  ├─ example_029.php
-   │     │  ├─ example_030.php
-   │     │  ├─ example_031.php
-   │     │  ├─ example_032.php
-   │     │  ├─ example_033.php
-   │     │  ├─ example_034.php
-   │     │  ├─ example_035.php
-   │     │  ├─ example_036.php
-   │     │  ├─ example_037.php
-   │     │  ├─ example_038.php
-   │     │  ├─ example_039.php
-   │     │  ├─ example_040.php
-   │     │  ├─ example_041.php
-   │     │  ├─ example_042.php
-   │     │  ├─ example_043.php
-   │     │  ├─ example_044.php
-   │     │  ├─ example_045.php
-   │     │  ├─ example_046.php
-   │     │  ├─ example_047.php
-   │     │  ├─ example_048.php
-   │     │  ├─ example_049.php
-   │     │  ├─ example_050.php
-   │     │  ├─ example_051.php
-   │     │  ├─ example_052.php
-   │     │  ├─ example_053.php
-   │     │  ├─ example_054.php
-   │     │  ├─ example_055.php
-   │     │  ├─ example_056.php
-   │     │  ├─ example_057.php
-   │     │  ├─ example_058.php
-   │     │  ├─ example_059.php
-   │     │  ├─ example_060.php
-   │     │  ├─ example_061.php
-   │     │  ├─ example_062.php
-   │     │  ├─ example_063.php
-   │     │  ├─ example_064.php
-   │     │  ├─ example_065.php
-   │     │  ├─ example_066.php
-   │     │  ├─ example_067.php
-   │     │  ├─ example_068.php
-   │     │  ├─ images
-   │     │  │  ├─ alpha.png
-   │     │  │  ├─ image_demo.jpg
-   │     │  │  ├─ image_with_alpha.png
-   │     │  │  ├─ img.png
-   │     │  │  ├─ logo_example.gif
-   │     │  │  ├─ logo_example.jpg
-   │     │  │  ├─ logo_example.png
-   │     │  │  ├─ tcpdf_box.ai
-   │     │  │  ├─ tcpdf_box.svg
-   │     │  │  ├─ tcpdf_cell.png
-   │     │  │  ├─ tcpdf_logo.jpg
-   │     │  │  ├─ tcpdf_signature.png
-   │     │  │  ├─ testsvg.svg
-   │     │  │  ├─ tux.svg
-   │     │  │  └─ _blank.png
-   │     │  ├─ index.php
-   │     │  ├─ lang
-   │     │  │  ├─ afr.php
-   │     │  │  ├─ ara.php
-   │     │  │  ├─ aze.php
-   │     │  │  ├─ bel.php
-   │     │  │  ├─ bra.php
-   │     │  │  ├─ bul.php
-   │     │  │  ├─ cat.php
-   │     │  │  ├─ ces.php
-   │     │  │  ├─ chi.php
-   │     │  │  ├─ cym.php
-   │     │  │  ├─ dan.php
-   │     │  │  ├─ eng.php
-   │     │  │  ├─ est.php
-   │     │  │  ├─ eus.php
-   │     │  │  ├─ far.php
-   │     │  │  ├─ fra.php
-   │     │  │  ├─ ger.php
-   │     │  │  ├─ gle.php
-   │     │  │  ├─ glg.php
-   │     │  │  ├─ hat.php
-   │     │  │  ├─ heb.php
-   │     │  │  ├─ hrv.php
-   │     │  │  ├─ hun.php
-   │     │  │  ├─ hye.php
-   │     │  │  ├─ ind.php
-   │     │  │  ├─ ita.php
-   │     │  │  ├─ jpn.php
-   │     │  │  ├─ kat.php
-   │     │  │  ├─ kor.php
-   │     │  │  ├─ mkd.php
-   │     │  │  ├─ mlt.php
-   │     │  │  ├─ msa.php
-   │     │  │  ├─ nld.php
-   │     │  │  ├─ nob.php
-   │     │  │  ├─ pol.php
-   │     │  │  ├─ por.php
-   │     │  │  ├─ ron.php
-   │     │  │  ├─ rus.php
-   │     │  │  ├─ slv.php
-   │     │  │  ├─ spa.php
-   │     │  │  ├─ sqi.php
-   │     │  │  ├─ srp.php
-   │     │  │  ├─ swa.php
-   │     │  │  ├─ swe.php
-   │     │  │  ├─ ukr.php
-   │     │  │  ├─ urd.php
-   │     │  │  ├─ yid.php
-   │     │  │  └─ zho.php
-   │     │  └─ tcpdf_include.php
    │     ├─ fonts
    │     │  ├─ aealarabiya.ctg.z
    │     │  ├─ aealarabiya.php
@@ -2586,26 +2443,11 @@ acss-1
    │     │  ├─ tcpdf_images.php
    │     │  └─ tcpdf_static.php
    │     ├─ LICENSE.TXT
-   │     ├─ phpstan.neon.dist
    │     ├─ README.md
-   │     ├─ scripts
-   │     │  └─ doctum.php
    │     ├─ tcpdf.php
    │     ├─ tcpdf_autoconfig.php
    │     ├─ tcpdf_barcodes_1d.php
    │     ├─ tcpdf_barcodes_2d.php
-   │     ├─ tests
-   │     │  ├─ compare_runs.php
-   │     │  ├─ composer.json
-   │     │  ├─ coverage.php
-   │     │  ├─ launch.php
-   │     │  ├─ launch.sh
-   │     │  └─ src
-   │     │     ├─ ImageMagick.php
-   │     │     ├─ PdfTools.php
-   │     │     ├─ PhpExecutor.php
-   │     │     ├─ TestExecutor.php
-   │     │     └─ TestRunner.php
    │     ├─ tools
    │     │  ├─ .htaccess
    │     │  ├─ convert_fonts_examples.txt
@@ -2613,113 +2455,57 @@ acss-1
    │     └─ VERSION
    └─ vlucas
       └─ phpdotenv
-         ├─ .editorconfig
          ├─ composer.json
          ├─ LICENSE
-         ├─ Makefile
-         ├─ phpstan-baseline.neon
-         ├─ phpstan.neon.dist
-         ├─ phpunit.xml.dist
-         ├─ psalm-baseline.xml
-         ├─ psalm.xml
-         ├─ README.md
-         ├─ src
-         │  ├─ Dotenv.php
-         │  ├─ Exception
-         │  │  ├─ ExceptionInterface.php
-         │  │  ├─ InvalidEncodingException.php
-         │  │  ├─ InvalidFileException.php
-         │  │  ├─ InvalidPathException.php
-         │  │  └─ ValidationException.php
-         │  ├─ Loader
-         │  │  ├─ Loader.php
-         │  │  ├─ LoaderInterface.php
-         │  │  └─ Resolver.php
-         │  ├─ Parser
-         │  │  ├─ Entry.php
-         │  │  ├─ EntryParser.php
-         │  │  ├─ Lexer.php
-         │  │  ├─ Lines.php
-         │  │  ├─ Parser.php
-         │  │  ├─ ParserInterface.php
-         │  │  └─ Value.php
-         │  ├─ Repository
-         │  │  ├─ Adapter
-         │  │  │  ├─ AdapterInterface.php
-         │  │  │  ├─ ApacheAdapter.php
-         │  │  │  ├─ ArrayAdapter.php
-         │  │  │  ├─ EnvConstAdapter.php
-         │  │  │  ├─ GuardedWriter.php
-         │  │  │  ├─ ImmutableWriter.php
-         │  │  │  ├─ MultiReader.php
-         │  │  │  ├─ MultiWriter.php
-         │  │  │  ├─ PutenvAdapter.php
-         │  │  │  ├─ ReaderInterface.php
-         │  │  │  ├─ ReplacingWriter.php
-         │  │  │  ├─ ServerConstAdapter.php
-         │  │  │  └─ WriterInterface.php
-         │  │  ├─ AdapterRepository.php
-         │  │  ├─ RepositoryBuilder.php
-         │  │  └─ RepositoryInterface.php
-         │  ├─ Store
-         │  │  ├─ File
-         │  │  │  ├─ Paths.php
-         │  │  │  └─ Reader.php
-         │  │  ├─ FileStore.php
-         │  │  ├─ StoreBuilder.php
-         │  │  ├─ StoreInterface.php
-         │  │  └─ StringStore.php
-         │  ├─ Util
-         │  │  ├─ Regex.php
-         │  │  └─ Str.php
-         │  └─ Validator.php
-         ├─ tests
-         │  ├─ Dotenv
-         │  │  ├─ DotenvTest.php
-         │  │  ├─ Loader
-         │  │  │  └─ LoaderTest.php
-         │  │  ├─ Parser
-         │  │  │  ├─ EntryParserTest.php
-         │  │  │  ├─ LexerTest.php
-         │  │  │  ├─ LinesTest.php
-         │  │  │  └─ ParserTest.php
-         │  │  ├─ Repository
-         │  │  │  ├─ Adapter
-         │  │  │  │  ├─ ArrayAdapterTest.php
-         │  │  │  │  ├─ EnvConstAdapterTest.php
-         │  │  │  │  ├─ PutenvAdapterTest.php
-         │  │  │  │  └─ ServerConstAdapterTest.php
-         │  │  │  └─ RepositoryTest.php
-         │  │  ├─ Store
-         │  │  │  └─ StoreTest.php
-         │  │  └─ ValidatorTest.php
-         │  └─ fixtures
-         │     └─ env
-         │        ├─ .env
-         │        ├─ assertions.env
-         │        ├─ booleans.env
-         │        ├─ commented.env
-         │        ├─ empty.env
-         │        ├─ example.env
-         │        ├─ exported.env
-         │        ├─ immutable.env
-         │        ├─ integers.env
-         │        ├─ large.env
-         │        ├─ multibyte.env
-         │        ├─ multiline.env
-         │        ├─ multiple.env
-         │        ├─ mutable.env
-         │        ├─ nested.env
-         │        ├─ quoted.env
-         │        ├─ specialchars.env
-         │        ├─ unicodevarnames.env
-         │        ├─ utf8-with-bom-encoding.env
-         │        └─ windows.env
-         ├─ UPGRADING.md
-         └─ vendor-bin
-            ├─ phpstan
-            │  └─ composer.json
-            └─ psalm
-               └─ composer.json
+         └─ src
+            ├─ Dotenv.php
+            ├─ Exception
+            │  ├─ ExceptionInterface.php
+            │  ├─ InvalidEncodingException.php
+            │  ├─ InvalidFileException.php
+            │  ├─ InvalidPathException.php
+            │  └─ ValidationException.php
+            ├─ Loader
+            │  ├─ Loader.php
+            │  ├─ LoaderInterface.php
+            │  └─ Resolver.php
+            ├─ Parser
+            │  ├─ Entry.php
+            │  ├─ EntryParser.php
+            │  ├─ Lexer.php
+            │  ├─ Lines.php
+            │  ├─ Parser.php
+            │  ├─ ParserInterface.php
+            │  └─ Value.php
+            ├─ Repository
+            │  ├─ Adapter
+            │  │  ├─ AdapterInterface.php
+            │  │  ├─ ApacheAdapter.php
+            │  │  ├─ ArrayAdapter.php
+            │  │  ├─ EnvConstAdapter.php
+            │  │  ├─ GuardedWriter.php
+            │  │  ├─ ImmutableWriter.php
+            │  │  ├─ MultiReader.php
+            │  │  ├─ MultiWriter.php
+            │  │  ├─ PutenvAdapter.php
+            │  │  ├─ ReaderInterface.php
+            │  │  ├─ ReplacingWriter.php
+            │  │  ├─ ServerConstAdapter.php
+            │  │  └─ WriterInterface.php
+            │  ├─ AdapterRepository.php
+            │  ├─ RepositoryBuilder.php
+            │  └─ RepositoryInterface.php
+            ├─ Store
+            │  ├─ File
+            │  │  ├─ Paths.php
+            │  │  └─ Reader.php
+            │  ├─ FileStore.php
+            │  ├─ StoreBuilder.php
+            │  ├─ StoreInterface.php
+            │  └─ StringStore.php
+            ├─ Util
+            │  ├─ Regex.php
+            │  └─ Str.php
+            └─ Validator.php
 
 ```
