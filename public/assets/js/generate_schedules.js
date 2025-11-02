@@ -491,19 +491,15 @@ function generateSchedules() {
     });
 }
 
-// NEW: Separate function to handle UI updates with proper async sequencing
-async function updateUIAfterGeneration(
-  responseData,
-  loadingOverlay,
-  startTime
-) {
+// Update the existing updateUIAfterGeneration function
+async function updateUIAfterGeneration(responseData, startTime) {
   try {
     console.log("🎨 Starting UI updates...");
 
     // Use requestAnimationFrame to ensure DOM is ready
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    // Step 1: Update schedule display (this is the heavy operation)
+    // Update schedule display
     console.log("📋 Updating schedule display...");
     const displayStartTime = performance.now();
 
@@ -512,18 +508,19 @@ async function updateUIAfterGeneration(
     const displayTime = performance.now() - displayStartTime;
     console.log(`✅ Display updated in ${displayTime.toFixed(2)}ms`);
 
-    // Step 2: Wait for another frame to ensure render is complete
+    // Wait for another frame to ensure render is complete
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    // Step 3: Update completion status banner
+    // Update completion status banner
     console.log("🏁 Updating completion status...");
     updateScheduleCompletionStatus(responseData);
 
-    // Step 4: Update generation results card
+    // Update generation results card
     console.log("📊 Updating results card...");
     const generationResults = document.getElementById("generation-results");
     if (generationResults) {
       generationResults.classList.remove("hidden");
+      generationResults.classList.add("generation-complete");
       document.getElementById("total-courses").textContent =
         responseData.totalCourses || 0;
       document.getElementById("total-sections").textContent =
@@ -532,52 +529,358 @@ async function updateUIAfterGeneration(
         responseData.successRate || "100%";
     }
 
-    // Step 5: Wait a bit longer to ensure all DOM updates are painted
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Step 6: NOW hide the loading overlay
     const totalTime = performance.now() - startTime;
-    console.log(
-      `✨ All updates complete in ${totalTime.toFixed(2)}ms, hiding overlay...`
-    );
+    console.log(`✨ All updates complete in ${totalTime.toFixed(2)}ms`);
 
-    if (loadingOverlay) {
-      loadingOverlay.classList.add("hidden");
+  } catch (error) {
+    console.error("❌ Error during UI update:", error);
+    throw error;
+  }
+}
+
+
+// Enhanced loading state management
+class ScheduleLoader {
+  constructor() {
+    this.steps = ['initializing', 'processing', 'optimizing', 'complete'];
+    this.currentStep = 0;
+    this.progress = 0;
+  }
+
+  show() {
+    const overlay = document.getElementById('loading-overlay');
+    overlay.classList.remove('hidden');
+    this.resetProgress();
+    this.updateStep(0);
+  }
+
+  hide() {
+    const overlay = document.getElementById('loading-overlay');
+    overlay.classList.add('hidden');
+    this.resetProgress();
+  }
+
+  resetProgress() {
+    this.currentStep = 0;
+    this.progress = 0;
+    this.updateProgressBar(0);
+    this.updateStats(0, 0, '0%');
+  }
+
+  updateStep(stepIndex) {
+    // Update all steps
+    this.steps.forEach((_, index) => {
+      const stepElement = document.getElementById(`step-${index + 1}`);
+      const stepIcon = stepElement.querySelector('.step-icon i');
+
+      stepElement.classList.remove('active', 'completed');
+      stepIcon.className = 'fas fa-clock text-xs';
+
+      if (index < stepIndex) {
+        stepElement.classList.add('completed');
+        stepIcon.className = 'fas fa-check text-xs';
+      } else if (index === stepIndex) {
+        stepElement.classList.add('active');
+        stepIcon.className = 'fas fa-cog fa-spin text-xs';
+      }
+    });
+
+    this.currentStep = stepIndex;
+  }
+
+  updateProgress(percentage, message, detail = '') {
+    this.progress = percentage;
+    this.updateProgressBar(percentage);
+
+    if (message) {
+      document.getElementById('status-message').textContent = message;
     }
 
-    // Step 7: Show notification AFTER everything is done
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    if (detail) {
+      document.getElementById('status-detail').textContent = detail;
+    }
+  }
 
-    if (
-      responseData.unassignedCourses &&
-      responseData.unassignedCourses.length > 0
-    ) {
-      showCompletionToast(
+  // Update the progress simulation to use theme colors
+  updateProgressBar(percentage) {
+    const progressBar = document.getElementById('progress-bar');
+    progressBar.style.width = `${percentage}%`;
+    document.getElementById('stat-progress').textContent = `${percentage}%`;
+
+    // Change color based on progress
+    if (percentage < 30) {
+      progressBar.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)'; // yellow
+    } else if (percentage < 70) {
+      progressBar.style.background = 'linear-gradient(90deg, #3b82f6, #1d4ed8)'; // blue
+    } else {
+      progressBar.style.background = 'linear-gradient(90deg, #10b981, #047857)'; // green
+    }
+  }
+
+  updateStats(courses, sections, progress) {
+    document.getElementById('stat-courses').textContent = courses;
+    document.getElementById('stat-sections').textContent = sections;
+    document.getElementById('stat-progress').textContent = progress;
+  }
+
+  simulateProgress() {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 5;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+      }
+      this.updateProgress(progress);
+    }, 200);
+
+    return interval;
+  }
+}
+
+// Initialize loader
+const scheduleLoader = new ScheduleLoader();
+
+// Enhanced generateSchedules function
+async function generateSchedules() {
+  const form = document.getElementById("generate-form");
+  if (!form) {
+    console.error("Generate form not found");
+    return;
+  }
+
+  const formData = new FormData(form);
+  const curriculumId = formData.get("curriculum_id");
+
+  console.log("generateSchedules called with curriculum:", curriculumId);
+
+  clearValidationErrors();
+
+  // Validation checks
+  const validationErrors = [];
+
+  if (!curriculumId) {
+    validationErrors.push("Please select a curriculum");
+    highlightField("curriculum_id", true);
+  }
+
+  if (window.sectionsData.length === 0) {
+    validationErrors.push("No sections available for the current semester");
+  }
+
+  if (window.curriculumCourses.length === 0) {
+    validationErrors.push("No courses available for the selected curriculum");
+  }
+
+  if (!window.faculty || window.faculty.length === 0) {
+    validationErrors.push("No faculty members available for assignment");
+  }
+
+  if (!window.classrooms || window.classrooms.length === 0) {
+    validationErrors.push("No classrooms available for assignment");
+  }
+
+  if (validationErrors.length > 0) {
+    showValidationToast(validationErrors);
+    return;
+  }
+
+  clearValidationErrors();
+
+  // Show enhanced loading overlay
+  scheduleLoader.show();
+
+  // Step 1: Initializing
+  scheduleLoader.updateStep(0);
+  scheduleLoader.updateProgress(10, "Initializing schedule generation...", "Loading curriculum data and resources");
+
+  await new Promise(resolve => setTimeout(resolve, 800));
+
+  const data = {
+    action: "generate_schedule",
+    curriculum_id: curriculumId,
+    semester_id: formData.get("semester_id"),
+    tab: "generate",
+  };
+
+  console.log("🚀 Sending data to backend:", data);
+  const startTime = performance.now();
+
+  try {
+    // Step 2: Processing
+    scheduleLoader.updateStep(1);
+    scheduleLoader.updateProgress(30, "Processing curriculum data...", "Analyzing courses and sections");
+
+    const response = await fetch("/chair/generate-schedules", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const text = await response.text();
+    console.log("📄 Raw response received (first 500 chars):", text.substring(0, 500));
+
+    let responseData;
+    try {
+      responseData = JSON.parse(text);
+    } catch (e) {
+      console.error("❌ Invalid JSON response:", text);
+      throw new Error("Invalid response format: " + e.message);
+    }
+
+    const fetchTime = performance.now() - startTime;
+    console.log(`⏱️ Fetch completed in ${fetchTime.toFixed(2)}ms`);
+    console.log("📊 Generation response:", responseData);
+
+    if (responseData.success) {
+      // Step 3: Optimizing
+      scheduleLoader.updateStep(2);
+      scheduleLoader.updateProgress(70, "Optimizing schedule assignments...", "Assigning faculty and classrooms");
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Update data
+      window.scheduleData = responseData.schedules || [];
+      console.log(`✅ Updated ${window.scheduleData.length} schedules`);
+
+      // Update stats
+      scheduleLoader.updateStats(
+        responseData.totalCourses || 0,
+        responseData.totalSections || 0,
+        "85%"
+      );
+
+      // Step 4: Complete
+      scheduleLoader.updateStep(3);
+      scheduleLoader.updateProgress(100, "Finalizing schedules...", "Applying optimizations and checks");
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Update UI
+      await updateUIAfterGeneration(responseData, startTime);
+
+      // Show completion animation
+      showCompletionAnimation(responseData);
+
+    } else {
+      throw new Error(responseData.message || "Failed to generate schedules");
+    }
+
+  } catch (error) {
+    console.error("❌ Error:", error);
+    scheduleLoader.hide();
+    showValidationToast(["Error generating schedules: " + error.message]);
+  }
+}
+
+// Enhanced completion animation with theme colors
+function showCompletionAnimation(responseData) {
+  const loadingContent = document.querySelector('.loading-content');
+  const originalContent = loadingContent.innerHTML;
+
+  loadingContent.innerHTML = `
+        <div class="completion-animation">
+            <div class="checkmark"></div>
+            <h3 class="text-xl font-bold mb-2 text-gray-800">Schedule Generation Complete!</h3>
+            <p class="text-gray-600 mb-4">Successfully generated ${responseData.schedules?.length || 0} schedules</p>
+            <div class="progress-stats">
+                <div class="stat">
+                    <div class="stat-value text-gray-800">${responseData.totalCourses || 0}</div>
+                    <div class="stat-label">Courses</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value text-gray-800">${responseData.totalSections || 0}</div>
+                    <div class="stat-label">Sections</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value text-gray-800">${responseData.successRate || '100%'}</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+  setTimeout(() => {
+    scheduleLoader.hide();
+    loadingContent.innerHTML = originalContent;
+
+    // Show appropriate notification
+    if (responseData.unassignedCourses && responseData.unassignedCourses.length > 0) {
+      showEnhancedToast(
         "warning",
-        "Schedules generated with some conflicts!",
+        "Schedules Generated with Some Conflicts",
         [
-          `${responseData.unassignedCourses.length} course(s) could not be automatically assigned`,
-          "Check for time conflicts or resource limitations",
-          "You can manually adjust schedules in the Manual Edit tab",
+          `${responseData.unassignedCourses.length} course(s) need manual scheduling`,
+          "Success rate: " + (responseData.successRate || "0%"),
+          "Check the Manual Edit tab to resolve conflicts"
         ]
       );
     } else {
-      showCompletionToast("success", "Schedules generated successfully!", [
-        `${responseData.schedules.length} courses scheduled`,
-        `${responseData.totalSections} sections assigned`,
-        "All courses successfully scheduled without conflicts",
-      ]);
+      showEnhancedToast(
+        "success",
+        "Schedules Generated Successfully!",
+        [
+          `${responseData.schedules?.length || 0} courses scheduled`,
+          `${responseData.totalSections || 0} sections assigned`,
+          "All courses successfully scheduled without conflicts"
+        ]
+      );
     }
-
-    console.log("🎉 Generation process complete!");
-  } catch (error) {
-    console.error("❌ Error during UI update:", error);
-    hideLoadingAndShowError(
-      loadingOverlay,
-      "Error updating display: " + error.message
-    );
-  }
+  }, 2000);
 }
+
+// Enhanced toast notifications
+function showEnhancedToast(type, title, messages) {
+  const toastContainer = getOrCreateToastContainer();
+
+  const toast = document.createElement('div');
+  toast.className = `enhanced-toast ${type} rounded-lg p-4 shadow-xl mb-3 transform transition-all duration-300`;
+
+  toast.innerHTML = `
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas ${type === 'success' ? 'fa-check-circle text-green-500' :
+      type === 'warning' ? 'fa-exclamation-triangle text-yellow-500' :
+        'fa-exclamation-circle text-red-500'
+    } text-xl"></i>
+            </div>
+            <div class="ml-3 flex-1">
+                <p class="text-sm font-semibold ${type === 'success' ? 'text-green-800' :
+      type === 'warning' ? 'text-yellow-800' :
+        'text-red-800'
+    }">${escapeHtml(title)}</p>
+                <ul class="mt-2 text-sm ${type === 'success' ? 'text-green-700' :
+      type === 'warning' ? 'text-yellow-700' :
+        'text-red-700'
+    } space-y-1">
+                    ${messages.map(msg => `<li>• ${escapeHtml(msg)}</li>`).join('')}
+                </ul>
+            </div>
+            <button class="ml-4 flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors" 
+                    onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+
+  toastContainer.appendChild(toast);
+
+  // Auto-remove after 6 seconds
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.style.transform = 'translateX(100%)';
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, 6000);
+}
+
 
 // Helper function to hide loading and show error
 function hideLoadingAndShowError(loadingOverlay, message) {

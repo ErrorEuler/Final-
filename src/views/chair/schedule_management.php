@@ -194,9 +194,9 @@ if ($userDepartmentId) {
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Curriculum</label>
-                            <select name="curriculum_id" id="curriculum_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white" onchange="updateCourses()" required>
+                        <!-- Enhanced Curriculum Select with Theme Colors -->
+                        <div class="relative">
+                            <select name="curriculum_id" id="curriculum_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white shadow-sm transition-all duration-200">
                                 <option value="">Select Curriculum</option>
                                 <?php foreach ($curricula as $curriculum): ?>
                                     <option value="<?php echo htmlspecialchars($curriculum['curriculum_id']); ?>">
@@ -204,6 +204,9 @@ if ($userDepartmentId) {
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
                         </div>
 
                         <div>
@@ -233,35 +236,37 @@ if ($userDepartmentId) {
                         </div>
                     </div>
 
-                    <div class="flex justify-end">
-                        <button type="button" id="generate-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-8 py-3 rounded-lg shadow-sm transition-all duration-200 transform hover:scale-105">
-                            <i class="fas fa-magic mr-2"></i>
-                            Generate Schedules
-                        </button>
-                    </div>
-                </form>
+                    <!-- Enhanced Generate Button with Theme Colors -->
+                    <button type="button" id="generate-btn" class="relative bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 hover:shadow-lg group border border-yellow-600">
+                        <i class="fas fa-magic mr-2 group-hover:rotate-12 transition-transform"></i>
+                        Generate Schedules
+                        <div class="absolute inset-0 rounded-lg bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                    </button>
 
-                <!-- Generation Results -->
-                <div id="generation-results" class="hidden mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
-                    <div class="flex items-center mb-4">
-                        <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
-                        <h3 class="text-lg font-semibold text-green-800">Schedules Generated Successfully!</h3>
+
+                    <!-- Enhanced Generation Results Card -->
+                    <div id="generation-results" class="hidden mt-8 p-6 bg-green-50 border border-green-200 rounded-lg border-l-4 border-l-green-500">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-green-500 p-2 rounded-full mr-3">
+                                <i class="fas fa-check-circle text-white text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-green-800">Schedules Generated Successfully!</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="bg-white p-4 rounded-lg text-center border border-green-100 shadow-sm">
+                                <div class="text-2xl font-bold text-green-600" id="total-courses">0</div>
+                                <div class="text-gray-600 mt-1">Courses Scheduled</div>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg text-center border border-green-100 shadow-sm">
+                                <div class="text-2xl font-bold text-green-600" id="total-sections">0</div>
+                                <div class="text-gray-600 mt-1">Sections</div>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg text-center border border-green-100 shadow-sm">
+                                <div class="text-2xl font-bold text-green-600" id="success-rate">100%</div>
+                                <div class="text-gray-600 mt-1">Success Rate</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div class="bg-white p-3 rounded-lg text-center">
-                            <div class="text-2xl font-bold text-green-600" id="total-courses">0</div>
-                            <div class="text-gray-600">Courses Scheduled</div>
-                        </div>
-                        <div class="bg-white p-3 rounded-lg text-center">
-                            <div class="text-2xl font-bold text-green-600" id="total-sections">0</div>
-                            <div class="text-gray-600">Sections</div>
-                        </div>
-                        <div class="bg-white p-3 rounded-lg text-center">
-                            <div class="text-2xl font-bold text-green-600" id="success-rate">100%</div>
-                            <div class="text-gray-600">Success Rate</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -863,11 +868,83 @@ if ($userDepartmentId) {
             </div>
         </div>
 
-        <!-- Loading Overlay -->
-        <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-md flex items-center justify-center z-50 hidden">
-            <div class="bg-white p-8 rounded-lg shadow-xl text-center">
-                <div class="pulsing-loader mx-auto mb-4"></div>
-                <p class="text-gray-700 font-medium">Generating schedules...</p>
+        <!-- Enhanced Loading Overlay - Theme Colors -->
+        <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+            <div class="loading-container">
+                <!-- Header with theme colors -->
+                <div class="loading-header">
+                    <div class="flex items-center justify-center space-x-3">
+                        <div class="header-icon w-12 h-12 rounded-full flex items-center justify-center">
+                            <i class="fas fa-magic text-lg"></i>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="text-xl font-bold">Generating Schedules</h3>
+                            <p class="text-blue-100 text-sm mt-1">Creating optimal schedule for your curriculum</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading-content">
+                    <!-- Progress Steps -->
+                    <div class="loading-steps">
+                        <div class="step completed" id="step-1">
+                            <div class="step-icon">
+                                <i class="fas fa-check text-xs"></i>
+                            </div>
+                            <span class="step-text">Initializing</span>
+                        </div>
+                        <div class="step active" id="step-2">
+                            <div class="step-icon">
+                                <i class="fas fa-cog fa-spin text-xs"></i>
+                            </div>
+                            <span class="step-text">Processing</span>
+                        </div>
+                        <div class="step" id="step-3">
+                            <div class="step-icon">
+                                <i class="fas fa-clock text-xs"></i>
+                            </div>
+                            <span class="step-text">Optimizing</span>
+                        </div>
+                        <div class="step" id="step-4">
+                            <div class="step-icon">
+                                <i class="fas fa-check text-xs"></i>
+                            </div>
+                            <span class="step-text">Complete</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+
+                    <!-- Status Messages -->
+                    <div class="status-message" id="status-message">Initializing schedule generation...</div>
+                    <div class="status-detail" id="status-detail">Preparing data and resources</div>
+
+                    <!-- Loading Animation -->
+                    <div class="loading-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+
+                    <!-- Progress Stats -->
+                    <div class="progress-stats">
+                        <div class="stat">
+                            <div class="stat-value" id="stat-courses">0</div>
+                            <div class="stat-label">Courses</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="stat-sections">0</div>
+                            <div class="stat-label">Sections</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="stat-progress">0%</div>
+                            <div class="stat-label">Progress</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -2828,7 +2905,7 @@ if ($userDepartmentId) {
                     // You can show a notification or update the UI
                     console.log('Incomplete schedules detected:', unassignedCourses);
                 }
-                }
+            }
 
             // Helper function to get consistent color for a schedule
             function getScheduleColor(schedule) {
