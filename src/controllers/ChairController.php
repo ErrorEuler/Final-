@@ -2408,15 +2408,33 @@ class ChairController extends BaseController
             $matchingSections = array_filter($sections, fn($s) => isset($s['year_level']) && in_array($s['year_level'], $yearLevels));
             error_log("generateSchedules: Found " . count($matchingSections) . " matching sections");
 
+            // ✅ FIX 1: FILTER OUT GENERAL EDUCATION COURSES - ONLY KEEP PROFESSIONAL COURSES
             $relevantCourses = array_filter(
                 $courses,
-                fn($c) => $c['curriculum_semester'] === $currentSemester['semester_name'] && in_array($c['curriculum_year'], $yearLevels)
+                function ($c) use ($currentSemester, $yearLevels) {
+                    $courseDetails = $this->getCourseDetails($c['course_id']);
+                    $subjectType = $courseDetails['subject_type'] ?? 'General Education';
+
+                    // ✅ ONLY include Professional Courses, exclude General Education
+                    $isProfessional = $subjectType === 'Professional Course';
+                    $isCorrectSemester = $c['curriculum_semester'] === $currentSemester['semester_name'];
+                    $isCorrectYear = in_array($c['curriculum_year'], $yearLevels);
+
+                    if ($isProfessional && $isCorrectSemester && $isCorrectYear) {
+                        error_log("✅ INCLUDING Professional Course: {$c['course_code']} - {$c['curriculum_year']}");
+                        return true;
+                    } else {
+                        error_log("❌ EXCLUDING Course: {$c['course_code']} - Type: $subjectType, Semester: {$c['curriculum_semester']}, Year: {$c['curriculum_year']}");
+                        return false;
+                    }
+                }
             );
+
             $relevantCourses = array_values($relevantCourses);
-            error_log("generateSchedules: Found " . count($relevantCourses) . " relevant courses");
+            error_log("generateSchedules: Found " . count($relevantCourses) . " relevant PROFESSIONAL courses (General Education filtered out)");
 
             if (empty($matchingSections) || empty($relevantCourses)) {
-                error_log("generateSchedules: No sections or courses found for curriculum $curriculumId, semester {$currentSemester['semester_name']}");
+                error_log("generateSchedules: No sections or professional courses found for curriculum $curriculumId, semester {$currentSemester['semester_name']}");
                 $this->db->commit();
                 return $schedules;
             }
@@ -2436,18 +2454,8 @@ class ChairController extends BaseController
             $facultySpecializations = $this->getFacultySpecializations($departmentId, $collegeId, $semesterType);
             error_log("generateSchedules: Faculty specializations count: " . count($facultySpecializations));
 
-            if (!empty($facultySpecializations)) {
-                error_log("DEBUG: First faculty structure: " . print_r($facultySpecializations[0], true));
-            } else {
-                error_log("DEBUG: facultySpecializations is empty - checking why");
-
-                try {
-                    $testResult = $this->getFacultySpecializations($departmentId, $collegeId, $semesterType);
-                    error_log("DEBUG: Direct call returned: " . count($testResult) . " results");
-                } catch (Exception $e) {
-                    error_log("DEBUG: getFacultySpecializations threw exception: " . $e->getMessage());
-                }
-            }
+            // ✅ FIX 2: ENHANCED SPECIALIZATION LOGIC - MODERATE STRONG
+            $this->applyEnhancedSpecializationLogic($facultySpecializations, $relevantCourses);
 
             // Initialize tracking arrays
             $facultyAssignments = [];
@@ -2470,20 +2478,10 @@ class ChairController extends BaseController
                 error_log("generateSchedules: Iteration $iteration, remaining courses: " . count($unassignedCourses));
                 $unassignedInThisIteration = [];
 
-                // Prioritize Professional Courses
-                $professionalCourses = array_filter($unassignedCourses, function ($c) {
-                    $courseDetails = $this->getCourseDetails($c['course_id']);
-                    return ($courseDetails['subject_type'] ?? 'General Education') === 'Professional Course';
-                });
+                // ✅ FIX 3: PRIORITIZE COURSES WITH SPECIALIZED FACULTY FIRST
+                $prioritizedCourses = $this->prioritizeCoursesBySpecialization($unassignedCourses, $facultySpecializations);
 
-                $generalCourses = array_filter($unassignedCourses, function ($c) {
-                    $courseDetails = $this->getCourseDetails($c['course_id']);
-                    return ($courseDetails['subject_type'] ?? 'General Education') !== 'Professional Course';
-                });
-
-                $coursesToProcess = array_merge(array_values($professionalCourses), array_values($generalCourses));
-
-                foreach ($coursesToProcess as $course) {
+                foreach ($prioritizedCourses as $course) {
                     $courseDetails = $this->getCourseDetails($course['course_id']);
                     if (!$courseDetails) {
                         error_log("generateSchedules: Skipping course with invalid details for course_id {$course['course_id']}");
@@ -2494,7 +2492,7 @@ class ChairController extends BaseController
                     $lectureHours = $courseDetails['lecture_hours'] ?? 0;
                     $labHours = $courseDetails['lab_hours'] ?? 0;
                     $units = $courseDetails['units'] ?? 3;
-                    $subjectType = $courseDetails['subject_type'] ?? 'General Education';
+                    $subjectType = $courseDetails['subject_type'] ?? 'Professional Course'; // Should be Professional after filtering
                     $hasLab = $labHours > 0;
                     $hasLecture = $lectureHours > 0;
 
@@ -2512,16 +2510,6 @@ class ChairController extends BaseController
 
                     if (!$hasWeekdaySlots && in_array($pattern, ['SAT', 'SUN'])) {
                         error_log("generateSchedules: Using weekend pattern '$pattern' for {$course['course_code']} - weekdays exhausted");
-                    }
-
-                    $isNSTPCourse = $this->isNSTPCourse($course['course_code']);
-                    if ($isNSTPCourse && !$this->areRoomsAvailableOnDays($departmentId, $sectionsForCourse, $targetDays, $flexibleTimeSlots, $roomAssignments, $schedules)) {
-                        if ($hasWeekdaySlots) {
-                            $targetDays = ['Saturday'];
-                            error_log("generateSchedules: Switching NSTP {$course['course_code']} to Saturday");
-                        } else {
-                            error_log("generateSchedules: Switching NSTP {$course['course_code']} ");
-                        }
                     }
 
                     $durationData = $this->calculateCourseDuration($courseDetails);
@@ -2551,7 +2539,7 @@ class ChairController extends BaseController
                             continue;
                         }
 
-                        $forceF2F = in_array($subjectType, ['Professional Course', 'Major Course']);
+                        $forceF2F = true; // ✅ Professional courses always F2F
 
                         if ($hasLecture && $hasLab) {
                             error_log("LECTURE+LAB: Processing {$course['course_code']} with both components");
@@ -2734,7 +2722,7 @@ class ChairController extends BaseController
                             $startTime = $timeSlot[0];
                             $endTime = $timeSlot[1];
 
-                            $facultyId = $this->findBestFaculty(
+                            $facultyId = $this->findBestFacultyWithSpecialization(
                                 $facultySpecializations,
                                 $course['course_id'],
                                 $targetDays,
@@ -2831,7 +2819,7 @@ class ChairController extends BaseController
                 $unassignedDetails = array_map(fn($c) => "Course: {$c['course_code']} for year {$c['curriculum_year']}", $unassignedCourses);
                 error_log("generateSchedules: Warning: Unscheduled courses: \n" . implode("\n", $unassignedDetails));
             } else {
-                error_log("generateSchedules: Success: All courses scheduled.");
+                error_log("generateSchedules: Success: All PROFESSIONAL courses scheduled.");
             }
 
             // BEFORE committing, balance workload
@@ -2839,9 +2827,6 @@ class ChairController extends BaseController
             $this->balanceFacultyWorkload($facultyAssignments, $facultySpecializations);
 
             // Log final workload distribution
-            $this->logFacultyWorkloadReport($facultyAssignments, $facultySpecializations);
-
-            // Log final faculty workload report
             $this->logFacultyWorkloadReport($facultyAssignments, $facultySpecializations);
 
             // Check for underloaded faculty and suggest redistribution
@@ -2857,13 +2842,6 @@ class ChairController extends BaseController
                 error_log("✅ Schedule validation passed - no conflicts found");
             }
 
-            // BEFORE committing, balance workload
-            error_log("⚖️ Starting workload balancing...");
-            $this->balanceFacultyWorkload($facultyAssignments, $facultySpecializations);
-
-            // Log final workload distribution
-            $this->logFacultyWorkloadReport($facultyAssignments, $facultySpecializations);
-
             $this->db->commit();
             error_log("✅ generateSchedules: Transaction committed, returning " . count($schedules) . " schedules");
             return $schedules;
@@ -2873,6 +2851,201 @@ class ChairController extends BaseController
             return [];
         }
     }
+
+
+    /**
+     * ✅ FIX 4: ENHANCED SPECIALIZATION LOGIC - MODERATE STRONG
+     * Applies stronger specialization matching while allowing some flexibility
+     */
+    private function applyEnhancedSpecializationLogic(&$facultySpecializations, $courses)
+    {
+        error_log("🎯 Applying MODERATE STRONG specialization logic...");
+
+        $courseIds = array_column($courses, 'course_id');
+
+        foreach ($facultySpecializations as &$faculty) {
+            $facultyId = $faculty['faculty_id'];
+            $specializations = $faculty['specializations'] ?? [];
+
+            // Count how many courses this faculty can specialize in
+            $matchingSpecializations = array_intersect($specializations, $courseIds);
+            $specializationCount = count($matchingSpecializations);
+
+            // MODERATE STRONG: Faculty with 2+ specializations get priority for those courses
+            if ($specializationCount >= 2) {
+                error_log("🎯 Faculty $facultyId has $specializationCount specializations - MODERATE STRONG priority");
+                $faculty['specialization_priority'] = 'high';
+                $faculty['matching_specializations'] = $matchingSpecializations;
+            } elseif ($specializationCount === 1) {
+                error_log("🎯 Faculty $facultyId has 1 specialization - MODERATE priority");
+                $faculty['specialization_priority'] = 'medium';
+                $faculty['matching_specializations'] = $matchingSpecializations;
+            } else {
+                error_log("🎯 Faculty $facultyId has no specializations - FALLBACK priority");
+                $faculty['specialization_priority'] = 'low';
+                $faculty['matching_specializations'] = [];
+            }
+        }
+    }
+
+    /**
+     * ✅ FIX 5: PRIORITIZE COURSES WITH AVAILABLE SPECIALIZED FACULTY
+     */
+    private function prioritizeCoursesBySpecialization($courses, $facultySpecializations)
+    {
+        $prioritized = [];
+        $fallback = [];
+
+        foreach ($courses as $course) {
+            $courseId = $course['course_id'];
+            $hasSpecializedFaculty = false;
+
+            // Check if any faculty has this course in their specializations
+            foreach ($facultySpecializations as $faculty) {
+                if (in_array($courseId, $faculty['matching_specializations'] ?? [])) {
+                    $hasSpecializedFaculty = true;
+                    break;
+                }
+            }
+
+            if ($hasSpecializedFaculty) {
+                $prioritized[] = $course;
+                error_log("🎯 PRIORITIZED: {$course['course_code']} - has specialized faculty");
+            } else {
+                $fallback[] = $course;
+                error_log("🔄 FALLBACK: {$course['course_code']} - no specialized faculty");
+            }
+        }
+
+        error_log("📊 Course prioritization: " . count($prioritized) . " prioritized, " . count($fallback) . " fallback");
+        return array_merge($prioritized, $fallback);
+    }
+
+    /**
+     * ✅ FIX 6: ENHANCED FACULTY FINDING WITH SPECIALIZATION PRIORITY
+     */
+    private function findBestFacultyWithSpecialization(
+        $facultySpecializations,
+        $courseId,
+        $targetDays,
+        $startTime,
+        $endTime,
+        $collegeId,
+        $departmentId,
+        $schedules,
+        $facultyAssignments,
+        $courseCode,
+        $sectionId
+    ) {
+        error_log("🔍 Finding BEST faculty for $courseCode with specialization priority...");
+
+        $courseDetails = $this->getCourseDetails($courseId);
+        $subjectType = $courseDetails['subject_type'] ?? 'Professional Course';
+        $courseUnits = $courseDetails['units'] ?? 3;
+
+        error_log("Course details: Type=$subjectType, Units=$courseUnits");
+        error_log("Total faculty pool: " . count($facultySpecializations));
+
+        $eligibleFaculty = [];
+
+        foreach ($facultySpecializations as $faculty) {
+            $facultyId = $faculty['faculty_id'];
+            $employmentType = $faculty['employment_type'] ?? 'Regular';
+
+            // Calculate current load for this faculty
+            $currentLoad = $this->calculateFacultyLoad($facultyId, $facultyAssignments, $facultySpecializations);
+            $limits = $this->getFacultyWorkloadLimits($employmentType);
+
+            // Check if faculty can teach this subject type (should always be true for Professional after filtering)
+            $canTeachThisSubject = true; // Since we filtered to only Professional courses
+
+            if (!$canTeachThisSubject) {
+                error_log("❌ Faculty $facultyId cannot teach $subjectType");
+                continue;
+            }
+
+            // Check availability (time conflicts)
+            if (!$this->isFacultyAvailable($facultyId, $targetDays, $startTime, $endTime, $facultyAssignments)) {
+                error_log("❌ Faculty $facultyId not available due to time conflict");
+                continue;
+            }
+
+            // ENHANCED LOAD BALANCING: Check if faculty is underloaded first
+            $isUnderloaded = $currentLoad['units'] < ($limits['max_units'] * 0.6); // Below 60% of max
+
+            // ENHANCED PRIORITIZATION WITH SPECIALIZATION
+            $priorityScore = 0;
+
+            // 1. SPECIALIZATION BONUS - MODERATE STRONG
+            if (in_array($courseId, $faculty['matching_specializations'] ?? [])) {
+                $priorityScore += 75; // Increased from 50 to 75 for stronger specialization preference
+                error_log("🎯 Faculty $facultyId has SPECIALIZATION - STRONG priority boost (+75)");
+            }
+
+            // 2. Underloaded faculty bonus
+            if ($isUnderloaded) {
+                $priorityScore += 50;
+                error_log("🎯 Faculty $facultyId is UNDERLOADED - priority boost (+50)");
+            }
+
+            // 3. Load balancing: prefer faculty with lower current load
+            $loadPercentage = ($currentLoad['units'] / $limits['max_units']) * 100;
+            $priorityScore += (100 - $loadPercentage); // Lower load = higher score
+            error_log("📊 Faculty $facultyId load: {$currentLoad['units']}/{$limits['max_units']} units ($loadPercentage%) = +" . (100 - $loadPercentage));
+
+            // 4. Same department bonus
+            if (in_array($departmentId, $faculty['assigned_departments'] ?? [])) {
+                $priorityScore += 25;
+                error_log("🎯 Faculty $facultyId is SAME DEPARTMENT - priority boost (+25)");
+            }
+
+            // Check if faculty can take more load
+            if (!$this->canFacultyTakeMoreLoad($facultyId, $courseUnits, $facultyAssignments, $facultySpecializations, $courseCode)) {
+                error_log("❌ Faculty $facultyId rejected due to workload limits");
+                continue;
+            }
+
+            $eligibleFaculty[] = array(
+                'faculty' => $faculty,
+                'priority_score' => $priorityScore,
+                'current_load' => $currentLoad,
+                'is_underloaded' => $isUnderloaded,
+                'employment_type' => $employmentType,
+                'has_specialization' => in_array($courseId, $faculty['matching_specializations'] ?? [])
+            );
+
+            error_log("✅ Faculty $facultyId added to eligible pool with score: $priorityScore");
+        }
+
+        if (empty($eligibleFaculty)) {
+            error_log("❌ No eligible faculty found for $courseCode");
+            return null;
+        }
+
+        // Sort by priority score (descending)
+        usort($eligibleFaculty, function ($a, $b) {
+            return $b['priority_score'] - $a['priority_score'];
+        });
+
+        // Log the top candidates
+        error_log("🏆 Top faculty candidates for $courseCode:");
+        foreach (array_slice($eligibleFaculty, 0, 3) as $index => $candidate) {
+            $specializationStatus = $candidate['has_specialization'] ? 'SPECIALIZED' : 'GENERAL';
+            error_log("  " . ($index + 1) . ". Faculty {$candidate['faculty']['faculty_id']} - Score: {$candidate['priority_score']}, Load: {$candidate['current_load']['units']} units, Type: $specializationStatus");
+        }
+
+        // Select the highest priority faculty
+        $selectedFaculty = $eligibleFaculty[0]['faculty'];
+
+        error_log("🎯 SELECTED faculty {$selectedFaculty['faculty_id']} for $courseCode");
+        error_log("   - Score: {$eligibleFaculty[0]['priority_score']}");
+        error_log("   - Current load: {$eligibleFaculty[0]['current_load']['units']} units");
+        error_log("   - Underloaded: " . ($eligibleFaculty[0]['is_underloaded'] ? 'YES' : 'NO'));
+        error_log("   - Specialized: " . ($eligibleFaculty[0]['has_specialization'] ? 'YES' : 'NO'));
+
+        return $selectedFaculty['faculty_id'];
+    }
+
 
     private function validateScheduleIntegrity($schedules, $facultyAssignments)
     {

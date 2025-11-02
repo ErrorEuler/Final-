@@ -269,16 +269,15 @@ function updateCourses() {
             const units = course.units || 0;
             const subjectType = course.subject_type || 'General Education';
 
-            html += `
-                        <div class="p-3 bg-gray-50 rounded border border-gray-100 hover:bg-blue-50 transition-colors">
-                            <div class="font-semibold text-gray-800">${escapeHtml(course.course_code)}</div>
-                            <div class="text-sm text-gray-600 mb-1">${escapeHtml(course.course_name)}</div>
-                            <div class="flex justify-between text-xs text-gray-500">
-                                <span>${escapeHtml(semester)}</span>
-                                <span>${units} units</span>
-                                <span class="capitalize">${escapeHtml(subjectType.toLowerCase())}</span>
-                            </div>
-                        </div>`;
+            // In the updateCourses function, add this line after loading courses:
+            html += `<div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200 text-sm text-blue-800">
+    <div class="flex items-center">
+        <i class="fas fa-info-circle mr-2"></i>
+        <div>
+            <strong>Note:</strong> Only Professional Courses will be scheduled. General Education courses are excluded.
+        </div>
+    </div>
+</div>`;
           });
 
           html += '</div></div>';
