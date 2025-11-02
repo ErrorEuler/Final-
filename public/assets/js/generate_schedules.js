@@ -16,16 +16,16 @@ console.log("Department ID:", window.departmentId);
 function initializeScheduleData() {
   window.sectionsData = Array.isArray(window.rawSectionsData)
     ? window.rawSectionsData.map((s, index) => ({
-        section_id: s.section_id ?? index + 1,
-        section_name: s.section_name ?? "",
-        year_level: s.year_level ?? "Unknown",
-        academic_year: s.academic_year ?? window.currentAcademicYear,
-        current_students: s.current_students ?? 0,
-        max_students: s.max_students ?? 30,
-        semester: s.semester ?? "",
-        is_active: s.is_active ?? 1,
-        curriculum_id: s.curriculum_id || null,
-      }))
+      section_id: s.section_id ?? index + 1,
+      section_name: s.section_name ?? "",
+      year_level: s.year_level ?? "Unknown",
+      academic_year: s.academic_year ?? window.currentAcademicYear,
+      current_students: s.current_students ?? 0,
+      max_students: s.max_students ?? 30,
+      semester: s.semester ?? "",
+      is_active: s.is_active ?? 1,
+      curriculum_id: s.curriculum_id || null,
+    }))
     : [];
 
   console.log("Processed sections data:", window.sectionsData);
@@ -39,19 +39,19 @@ function initializeScheduleData() {
 
   window.curriculumCourses = Array.isArray(window.jsData?.curriculumCourses)
     ? window.jsData.curriculumCourses.map((c, index) => ({
-        course_id: c.course_id ?? index + 1,
-        course_code: c.course_code ?? "",
-        course_name: c.course_name ?? "Unknown",
-        year_level: c.curriculum_year ?? "Unknown",
-        semester:
-          c.curriculum_semester ?? window.currentSemester?.semester_name,
-        subject_type: c.subject_type ?? "",
-        units: c.units ?? 0,
-        lecture_units: c.lecture_units ?? 0,
-        lab_units: c.lab_units ?? 0,
-        lecture_hours: c.lecture_hours ?? 0,
-        lab_hours: c.lab_hours ?? 0,
-      }))
+      course_id: c.course_id ?? index + 1,
+      course_code: c.course_code ?? "",
+      course_name: c.course_name ?? "Unknown",
+      year_level: c.curriculum_year ?? "Unknown",
+      semester:
+        c.curriculum_semester ?? window.currentSemester?.semester_name,
+      subject_type: c.subject_type ?? "",
+      units: c.units ?? 0,
+      lecture_units: c.lecture_units ?? 0,
+      lab_units: c.lab_units ?? 0,
+      lecture_hours: c.lecture_hours ?? 0,
+      lab_hours: c.lab_hours ?? 0,
+    }))
     : [];
 
   console.log("Processed curriculum courses:", window.curriculumCourses);
@@ -126,36 +126,30 @@ function showCompletionToast(type, title, messages) {
   const toastContainer = getOrCreateToastContainer();
 
   const toast = document.createElement("div");
-  toast.className = `bg-${
-    type === "success" ? "green" : "yellow"
-  }-50 border border-${
-    type === "success" ? "green" : "yellow"
-  }-200 rounded-lg p-4 shadow-lg max-w-sm w-full transition-opacity duration-300`;
+  toast.className = `bg-${type === "success" ? "green" : "yellow"
+    }-50 border border-${type === "success" ? "green" : "yellow"
+    }-200 rounded-lg p-4 shadow-lg max-w-sm w-full transition-opacity duration-300`;
   toast.innerHTML = `
     <div class="flex items-start">
       <div class="flex-shrink-0">
-        <i class="fas ${
-          type === "success"
-            ? "fa-check-circle text-green-500"
-            : "fa-exclamation-triangle text-yellow-500"
-        } text-xl"></i>
+        <i class="fas ${type === "success"
+      ? "fa-check-circle text-green-500"
+      : "fa-exclamation-triangle text-yellow-500"
+    } text-xl"></i>
       </div>
       <div class="ml-3 flex-1">
-        <p class="text-sm font-medium ${
-          type === "success" ? "text-green-800" : "text-yellow-800"
-        }">${escapeHtml(title)}</p>
-        <ul class="list-disc pl-5 text-sm ${
-          type === "success" ? "text-green-700" : "text-yellow-700"
-        } mt-1">
+        <p class="text-sm font-medium ${type === "success" ? "text-green-800" : "text-yellow-800"
+    }">${escapeHtml(title)}</p>
+        <ul class="list-disc pl-5 text-sm ${type === "success" ? "text-green-700" : "text-yellow-700"
+    } mt-1">
           ${messages.map((msg) => `<li>${escapeHtml(msg)}</li>`).join("")}
         </ul>
       </div>
       <div class="ml-3 flex-shrink-0">
-        <button class="${
-          type === "success"
-            ? "text-green-400 hover:text-green-600"
-            : "text-yellow-400 hover:text-yellow-600"
-        }" onclick="this.parentElement.parentElement.parentElement.remove()">
+        <button class="${type === "success"
+      ? "text-green-400 hover:text-green-600"
+      : "text-yellow-400 hover:text-yellow-600"
+    }" onclick="this.parentElement.parentElement.parentElement.remove()">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -187,82 +181,137 @@ function clearValidationErrors() {
   ["curriculum_id"].forEach((fieldId) => highlightField(fieldId, false));
 }
 
-// Update courses list based on selected curriculum
 function updateCourses() {
   const curriculumId = document.getElementById("curriculum_id").value;
   const coursesList = document.getElementById("courses-list");
+
   if (!coursesList) {
     console.error("Courses list element not found");
     return;
   }
-  console.log("updateCourses called with curriculum:", curriculumId);
+
+  console.log("🔄 updateCourses called with curriculum:", curriculumId);
+
   if (!curriculumId) {
-    coursesList.innerHTML =
-      '<p class="text-sm text-gray-600">Please select a curriculum to view available courses.</p>';
+    coursesList.innerHTML = '<p class="text-sm text-gray-600">Please select a curriculum to view available courses.</p>';
     return;
   }
-  coursesList.innerHTML =
-    '<p class="text-sm text-gray-600">Loading courses...</p>';
+
+  coursesList.innerHTML = '<div class="flex items-center text-sm text-gray-600"><i class="fas fa-spinner fa-spin mr-2"></i> Loading courses...</div>';
+
+  // Create form data with ALL required parameters
+  const formData = new URLSearchParams();
+  formData.append('action', 'get_curriculum_courses');
+  formData.append('curriculum_id', curriculumId);
+  formData.append('semester_id', window.currentSemester?.semester_id || '6'); // Fallback to current semester
+  formData.append('department_id', window.departmentId || '14');
+  formData.append('college_id', window.jsData?.collegeId || '7');
+
+  console.log("📤 Sending request with data:", Object.fromEntries(formData));
 
   fetch("/chair/generate-schedules", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({
-      action: "get_curriculum_courses",
-      curriculum_id: curriculumId,
-      semester_id: window.currentSemester.semester_id,
-      department_id: window.departmentId,
-      college_id: window.jsData.collegeId,
-    }),
+    body: formData,
   })
-    .then((response) => {
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       return response.text();
     })
-    .then((text) => {
-      console.log("Raw response:", text);
+    .then(text => {
+      console.log("📄 Raw response received:", text);
       let data;
       try {
         data = JSON.parse(text);
       } catch (e) {
-        console.error("JSON parse error:", e, "Response:", text);
+        console.error("❌ JSON parse error:", e, "Response:", text);
         throw new Error("Invalid JSON response: " + e.message);
       }
-      console.log("Fetched courses:", data.courses);
-      window.curriculumCourses = data.courses || [];
-      if (window.curriculumCourses.length === 0) {
-        coursesList.innerHTML =
-          '<p class="text-sm text-red-600">No courses found for the selected curriculum and semester.</p>';
+
+      console.log("✅ Fetched courses data:", data);
+
+      // Check if we have courses in the response
+      if (data.courses) {
+        window.curriculumCourses = data.courses;
+      } else if (data.success && data.courses) {
+        window.curriculumCourses = data.courses;
       } else {
-        coursesList.innerHTML = `
-                <ul class="list-disc pl-5 text-sm text-gray-700">
-                    ${window.curriculumCourses
-                      .map(
-                        (course) => `
-                                <li>
-                                    ${escapeHtml(
-                                      course.course_code
-                                    )} - ${escapeHtml(course.course_name)}
-                                    (Year: ${escapeHtml(
-                                      course.curriculum_year
-                                    )}, Semester: ${escapeHtml(
-                          course.curriculum_semester
-                        )})
-                                </li>
-                            `
-                      )
-                      .join("")}
-                </ul>
+        window.curriculumCourses = data || [];
+      }
+
+      if (window.curriculumCourses.length === 0) {
+        coursesList.innerHTML = '<div class="text-sm text-red-600 p-3 bg-red-50 rounded border border-red-200"><i class="fas fa-exclamation-triangle mr-2"></i>No courses found for the selected curriculum.</div>';
+      } else {
+        // Group courses by year level for better display
+        const coursesByYear = {};
+        window.curriculumCourses.forEach(course => {
+          const year = course.curriculum_year || course.year_level || 'Unknown Year';
+          if (!coursesByYear[year]) {
+            coursesByYear[year] = [];
+          }
+          coursesByYear[year].push(course);
+        });
+
+        let html = '';
+        Object.keys(coursesByYear).sort().forEach(year => {
+          html += `
+                    <div class="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+                        <h4 class="font-semibold text-gray-800 mb-3 text-lg flex items-center">
+                            <i class="fas fa-graduation-cap mr-2 text-blue-500"></i>
+                            ${escapeHtml(year)}
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+
+          coursesByYear[year].forEach(course => {
+            const semester = course.curriculum_semester || course.semester || 'All Semesters';
+            const units = course.units || 0;
+            const subjectType = course.subject_type || 'General Education';
+
+            html += `
+                        <div class="p-3 bg-gray-50 rounded border border-gray-100 hover:bg-blue-50 transition-colors">
+                            <div class="font-semibold text-gray-800">${escapeHtml(course.course_code)}</div>
+                            <div class="text-sm text-gray-600 mb-1">${escapeHtml(course.course_name)}</div>
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>${escapeHtml(semester)}</span>
+                                <span>${units} units</span>
+                                <span class="capitalize">${escapeHtml(subjectType.toLowerCase())}</span>
+                            </div>
+                        </div>`;
+          });
+
+          html += '</div></div>';
+        });
+
+        coursesList.innerHTML = html;
+
+        // Show total count
+        const totalCount = document.createElement('div');
+        totalCount.className = 'mt-4 p-3 bg-green-50 rounded-lg border border-green-200 text-sm text-green-800';
+        totalCount.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <div>
+                        <strong>Curriculum Loaded Successfully!</strong><br>
+                        Total: ${window.curriculumCourses.length} courses across ${Object.keys(coursesByYear).length} year levels
+                    </div>
+                </div>
             `;
+        coursesList.appendChild(totalCount);
+
+        console.log(`✅ Loaded ${window.curriculumCourses.length} courses for curriculum ${curriculumId}`);
       }
     })
-    .catch((error) => {
-      console.error("Error fetching courses:", error);
-      coursesList.innerHTML =
-        '<p class="text-sm text-red-600">Error loading courses. Please try again.</p>';
+    .catch(error => {
+      console.error("❌ Error fetching courses:", error);
+
+      coursesList.innerHTML = `
+            <div class="text-sm text-red-600 p-3 bg-red-50 rounded border border-red-200">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                Error loading courses: ${escapeHtml(error.message)}
+            </div>
+        `;
       showValidationToast(["Error loading courses: " + error.message]);
     });
 }
@@ -290,19 +339,17 @@ function updateScheduleCompletionStatus(data) {
         <div class="ml-3 flex-1">
           <h3 class="text-sm font-semibold text-yellow-800">Schedule Generation Incomplete</h3>
           <div class="mt-2 text-sm text-yellow-700">
-            <p class="mb-2">${
-              data.unassignedCourses.length
-            } course(s) could not be scheduled automatically:</p>
+            <p class="mb-2">${data.unassignedCourses.length
+      } course(s) could not be scheduled automatically:</p>
             <ul class="list-disc list-inside ml-2">
               ${data.unassignedCourses
-                .map((c) => `<li>${escapeHtml(c.course_code)}</li>`)
-                .join("")}
+        .map((c) => `<li>${escapeHtml(c.course_code)}</li>`)
+        .join("")}
             </ul>
             <p class="mt-3">
               <strong>Success Rate:</strong> ${data.successRate || "0%"} 
-              (${data.totalCourses - data.unassignedCourses.length} of ${
-      data.totalCourses
-    } courses scheduled)
+              (${data.totalCourses - data.unassignedCourses.length} of ${data.totalCourses
+      } courses scheduled)
             </p>
           </div>
           <div class="mt-3">
@@ -544,24 +591,33 @@ function hideLoadingAndShowError(loadingOverlay, message) {
 // Initialize event listeners
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM fully loaded, initializing generate_schedules.js");
+  console.log("Available curricula:", window.curricula);
+  console.log("Current semester:", window.currentSemester);
+  console.log("Department ID:", window.departmentId);
+  console.log("College ID:", window.jsData?.collegeId);
 
   initializeScheduleData();
 
   const curriculumSelect = document.getElementById("curriculum_id");
   if (curriculumSelect) {
-    curriculumSelect.addEventListener("change", updateCourses);
+    console.log("Curriculum select found, options:", curriculumSelect.options.length);
+    curriculumSelect.addEventListener("change", function () {
+      console.log("Curriculum changed to:", this.value);
+      updateCourses();
+    });
+
+    // Trigger initial load if there's a selected curriculum
+    if (curriculumSelect.value) {
+      console.log("Initial curriculum selected:", curriculumSelect.value);
+      updateCourses();
+    }
   } else {
     console.error("Curriculum select element not found");
   }
 
   const generateButton = document.getElementById("generate-btn");
   if (generateButton) {
-    // Remove any existing event listeners by cloning the button
-    const newButton = generateButton.cloneNode(true);
-    generateButton.parentNode.replaceChild(newButton, generateButton);
-
-    // Add our properly async event listener
-    newButton.addEventListener("click", generateSchedules);
+    generateButton.addEventListener("click", generateSchedules);
     console.log("✅ Generate button event listener attached");
   } else {
     console.error("Generate button not found");
