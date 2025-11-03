@@ -406,7 +406,14 @@ function initializeDragAndDrop() {
 function validateFieldRealTime(fieldType, value, relatedFields = {}) {
   clearTimeout(validationTimeout);
   validationTimeout = setTimeout(() => {
-    const formData = new FormData(document.getElementById("schedule-form"));
+    // Check if the form exists before trying to use it
+    const form = document.getElementById("schedule-form");
+    if (!form) {
+      console.warn("Schedule form not found for validation");
+      return;
+    }
+
+    const formData = new FormData(form);
     const partialData = {
       action: "validate_partial",
       semester_id: window.currentSemester?.semester_id,
@@ -1018,7 +1025,6 @@ function showNotification(message, type = "success", duration = 5000) {
   }, duration);
 }
 
-// Enhanced autoFillCourseName with better messaging
 function autoFillCourseName(courseCode) {
   const courseNameInput = document.getElementById("course-name");
   if (!courseCode || !courseNameInput) return;
@@ -1038,10 +1044,11 @@ function autoFillCourseName(courseCode) {
     courseNameInput.value = course.name;
     console.log("Found course:", course);
 
-    // Show success message for valid course
+    // Show success message with curriculum info
+    const curriculumInfo = course.curriculum_name ? ` from ${course.curriculum_name}` : '';
     if (!conflict) {
       displayConflictWarning("course-code",
-        "✅ Course found in curriculum! Course name auto-filled.",
+        `✅ Course found in active curriculum${curriculumInfo}! Course name auto-filled.`,
         'success'
       );
     }
@@ -1051,13 +1058,13 @@ function autoFillCourseName(courseCode) {
       handleSectionChange();
     }, 100);
   } else {
-    console.log("Course not found in current semester");
+    console.log("Course not found in any active curriculum");
     courseNameInput.value = "";
     resetSectionFilter();
 
     if (!conflict && enteredCode) {
       displayConflictWarning("course-code",
-        "🔍 Course not found in current semester curriculum. Please verify the course code.",
+        "🔍 Course not found in any active curriculum. Please verify the course code or check if the curriculum is active.",
         'warning'
       );
     }
@@ -1139,8 +1146,23 @@ function updateTimeFields() {
   const modalStartTime = document.getElementById("modal-start-time");
   const modalEndTime = document.getElementById("modal-end-time");
 
+  if (!startTimeSelect || !modalStartTime || !endTimeSelect || !modalEndTime) {
+    return; // Elements not ready yet
+  }
+
   if (startTimeSelect && modalStartTime) modalStartTime.value = startTimeSelect.value + ":00";
   if (endTimeSelect && modalEndTime) modalEndTime.value = endTimeSelect.value + ":00";
+}
+
+function updateDayField() {
+  const daySelect = document.getElementById("day-select");
+  const modalDay = document.getElementById("modal-day");
+
+  if (!daySelect || !modalDay) {
+    return; // Elements not ready yet
+  }
+
+  if (daySelect && modalDay) modalDay.value = daySelect.value;
 }
 
 function updateDayField() {
@@ -1153,6 +1175,13 @@ function handleScheduleSubmit(e) {
   e.preventDefault();
   console.log("Submitting schedule form...");
   resetConflictStyles();
+
+   // Check if form exists
+  const form = document.getElementById("schedule-form");
+  if (!form) {
+    showNotification("Form not ready. Please try again.", "error");
+    return;
+  }
 
   const currentSemesterId = window.currentSemester?.semester_id;
   if (!currentSemesterId) {
@@ -1348,14 +1377,31 @@ function resetConflictStyles() {
 
 function buildCurrentSemesterCourseMappings() {
   currentSemesterCourses = {};
-  console.log("Building course mappings for current semester:", window.currentSemester);
+  console.log("Building course mappings for current semester from ALL active curricula:", window.currentSemester);
   console.log("Available curriculum courses:", window.curriculumCourses);
 
   if (window.curriculumCourses && window.curriculumCourses.length > 0) {
-    console.log("Using curriculum courses:", window.curriculumCourses.length);
+    console.log("Using ALL curriculum courses:", window.curriculumCourses.length);
+
+    // Track curriculum distribution for logging
+    const curriculumDistribution = {};
+
     window.curriculumCourses.forEach((course) => {
       if (course.course_code && course.course_name) {
-        currentSemesterCourses[course.course_code.trim().toUpperCase()] = {
+        const courseKey = course.course_code.trim().toUpperCase();
+
+        // Track which curriculum this course came from
+        const curriculumId = course.curriculum_id;
+        if (!curriculumDistribution[curriculumId]) {
+          curriculumDistribution[curriculumId] = {
+            name: course.curriculum_name || `Curriculum ${curriculumId}`,
+            count: 0
+          };
+        }
+        curriculumDistribution[curriculumId].count++;
+
+        // Store course info - if duplicate course code, keep the most recent one or merge info
+        currentSemesterCourses[courseKey] = {
           code: course.course_code,
           name: course.course_name,
           course_id: course.course_id,
@@ -1364,11 +1410,20 @@ function buildCurrentSemesterCourseMappings() {
           units: course.units,
           lecture_hours: course.lecture_hours,
           lab_hours: course.lab_hours,
+          curriculum_id: curriculumId,
+          curriculum_name: course.curriculum_name,
+          curriculum_status: course.curriculum_status || 'Active'
         };
       }
     });
 
-    console.log("Course mappings built:", Object.keys(currentSemesterCourses).length, "unique courses");
+    // Log curriculum distribution
+    console.log("Course mappings built from multiple curricula:", Object.keys(currentSemesterCourses).length, "unique courses");
+    console.log("Curriculum distribution:");
+    Object.keys(curriculumDistribution).forEach(currId => {
+      console.log(`   - ${curriculumDistribution[currId].name}: ${curriculumDistribution[currId].count} courses`);
+    });
+
     console.log("Sample courses:", Object.values(currentSemesterCourses).slice(0, 3));
     updateCourseCodesDatalist();
   } else {
@@ -1397,16 +1452,40 @@ function updateCourseCodesDatalist() {
   if (!courseCodesDatalist) return;
 
   courseCodesDatalist.innerHTML = "";
+
+  // Group courses by curriculum for better organization
+  const coursesByCurriculum = {};
   Object.values(currentSemesterCourses).forEach((course) => {
-    const option = document.createElement("option");
-    option.value = course.code;
-    option.setAttribute("data-name", course.name);
-    option.setAttribute("data-year-level", course.year_level || "");
-    option.setAttribute("data-course-id", course.course_id || "");
-    courseCodesDatalist.appendChild(option);
+    const curriculumId = course.curriculum_id || 'default';
+    if (!coursesByCurriculum[curriculumId]) {
+      coursesByCurriculum[curriculumId] = {
+        name: course.curriculum_name || 'Default Curriculum',
+        courses: []
+      };
+    }
+    coursesByCurriculum[curriculumId].courses.push(course);
   });
 
-  console.log("Updated course codes datalist with", courseCodesDatalist.children.length, "options");
+  // Add options grouped by curriculum (optional visual grouping)
+  Object.keys(coursesByCurriculum).forEach(curriculumId => {
+    const curriculum = coursesByCurriculum[curriculumId];
+
+    // You could add optgroup here for better organization, but datalist doesn't support optgroup
+    // So we'll just add all options but include curriculum info in the tooltip
+    curriculum.courses.forEach((course) => {
+      const option = document.createElement("option");
+      option.value = course.code;
+      option.setAttribute("data-name", course.name);
+      option.setAttribute("data-year-level", course.year_level || "");
+      option.setAttribute("data-course-id", course.course_id || "");
+      option.setAttribute("data-curriculum", course.curriculum_name || "");
+      option.setAttribute("data-curriculum-status", course.curriculum_status || "Active");
+      option.title = `${course.code} - ${course.name} (${course.curriculum_name || 'Curriculum'})`;
+      courseCodesDatalist.appendChild(option);
+    });
+  });
+
+  console.log("Updated course codes datalist with", courseCodesDatalist.children.length, "options from", Object.keys(coursesByCurriculum).length, "active curricula");
 }
 
 // Enhanced syncCourseName with conflict detection
@@ -2084,74 +2163,108 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Real-time validation setup
-  const facultySelect = document.getElementById("faculty-name");
-  if (facultySelect) {
-    facultySelect.addEventListener("change", (e) => {
-      validateFieldRealTime("faculty_name", e.target.value, {
-        day_of_week: document.getElementById("day-select")?.value || "",
-        start_time: document.getElementById("start-time")?.value + ":00" || "",
-        end_time: document.getElementById("end-time")?.value + ":00" || "",
-      });
+  // Real-time validation setup - WITH SAFETY CHECKS
+  function setupValidation() {
+    const form = document.getElementById("schedule-form");
+    if (!form) {
+      console.warn("Schedule form not found, retrying in 10ms");
+      setTimeout(setupValidation, 10000000);
+      return;
+    }
+
+    console.log("✅ Schedule form found, setting up validation listeners");
+
+    // Remove any existing listeners first to prevent duplicates
+    const facultySelect = document.getElementById("faculty-name");
+    if (facultySelect) {
+      facultySelect.removeEventListener("change", facultyChangeHandler);
+      facultySelect.addEventListener("change", facultyChangeHandler);
+    }
+
+    const roomSelect = document.getElementById("room-name");
+    if (roomSelect) {
+      roomSelect.removeEventListener("change", roomChangeHandler);
+      roomSelect.addEventListener("change", roomChangeHandler);
+    }
+
+    const sectionSelect = document.getElementById("section-name");
+    if (sectionSelect) {
+      sectionSelect.removeEventListener("change", sectionChangeHandler);
+      sectionSelect.addEventListener("change", sectionChangeHandler);
+    }
+
+    const daySelect = document.getElementById("day-select");
+    if (daySelect) {
+      daySelect.removeEventListener("change", dayChangeHandler);
+      daySelect.addEventListener("change", dayChangeHandler);
+    }
+
+    const startTimeSelect = document.getElementById("start-time");
+    if (startTimeSelect) {
+      startTimeSelect.removeEventListener("change", startTimeChangeHandler);
+      startTimeSelect.addEventListener("change", startTimeChangeHandler);
+    }
+
+    const endTimeSelect = document.getElementById("end-time");
+    if (endTimeSelect) {
+      endTimeSelect.removeEventListener("change", endTimeChangeHandler);
+      endTimeSelect.addEventListener("change", endTimeChangeHandler);
+    }
+  }
+
+  // Define the handler functions separately
+  function facultyChangeHandler(e) {
+    validateFieldRealTime("faculty_name", e.target.value, {
+      day_of_week: document.getElementById("day-select")?.value || "",
+      start_time: document.getElementById("start-time")?.value + ":00" || "",
+      end_time: document.getElementById("end-time")?.value + ":00" || "",
     });
   }
 
-  const roomSelect = document.getElementById("room-name");
-  if (roomSelect) {
-    roomSelect.addEventListener("change", (e) => {
-      validateFieldRealTime("room_name", e.target.value, {
-        day_of_week: document.getElementById("day-select")?.value || "",
-        start_time: document.getElementById("start-time")?.value + ":00" || "",
-        end_time: document.getElementById("end-time")?.value + ":00" || "",
-      });
+  function roomChangeHandler(e) {
+    validateFieldRealTime("room_name", e.target.value, {
+      day_of_week: document.getElementById("day-select")?.value || "",
+      start_time: document.getElementById("start-time")?.value + ":00" || "",
+      end_time: document.getElementById("end-time")?.value + ":00" || "",
     });
   }
 
-  const sectionSelect = document.getElementById("section-name");
-  if (sectionSelect) {
-    sectionSelect.addEventListener("change", (e) => {
-      validateFieldRealTime("section_name", e.target.value);
-      handleSectionChange();
+  function sectionChangeHandler(e) {
+    validateFieldRealTime("section_name", e.target.value);
+    handleSectionChange();
+  }
+
+  function dayChangeHandler(e) {
+    updateDayField();
+    validateFieldRealTime("day_of_week", e.target.value, {
+      faculty_name: document.getElementById("faculty-name")?.value || "",
+      room_name: document.getElementById("room-name")?.value || "",
+      start_time: document.getElementById("start-time")?.value + ":00" || "",
+      end_time: document.getElementById("end-time")?.value + ":00" || "",
     });
   }
 
-  const daySelect = document.getElementById("day-select");
-  if (daySelect) {
-    daySelect.addEventListener("change", (e) => {
-      updateDayField();
-      validateFieldRealTime("day_of_week", e.target.value, {
-        faculty_name: document.getElementById("faculty-name")?.value || "",
-        room_name: document.getElementById("room-name")?.value || "",
-        start_time: document.getElementById("start-time")?.value + ":00" || "",
-        end_time: document.getElementById("end-time")?.value + ":00" || "",
-      });
+  function startTimeChangeHandler(e) {
+    updateTimeFields();
+    validateFieldRealTime("start_time", e.target.value + ":00", {
+      day_of_week: document.getElementById("day-select")?.value || "",
+      faculty_name: document.getElementById("faculty-name")?.value || "",
+      room_name: document.getElementById("room-name")?.value || "",
     });
   }
 
-  const startTimeSelect = document.getElementById("start-time");
-  if (startTimeSelect) {
-    startTimeSelect.addEventListener("change", (e) => {
-      updateTimeFields();
-      validateFieldRealTime("start_time", e.target.value + ":00", {
-        day_of_week: document.getElementById("day-select")?.value || "",
-        faculty_name: document.getElementById("faculty-name")?.value || "",
-        room_name: document.getElementById("room-name")?.value || "",
-      });
+  function endTimeChangeHandler(e) {
+    updateTimeFields();
+    validateFieldRealTime("end_time", e.target.value + ":00", {
+      day_of_week: document.getElementById("day-select")?.value || "",
+      start_time: document.getElementById("start-time")?.value + ":00" || "",
+      faculty_name: document.getElementById("faculty-name")?.value || "",
+      room_name: document.getElementById("room-name")?.value || "",
     });
   }
 
-  const endTimeSelect = document.getElementById("end-time");
-  if (endTimeSelect) {
-    endTimeSelect.addEventListener("change", (e) => {
-      updateTimeFields();
-      validateFieldRealTime("end_time", e.target.value + ":00", {
-        day_of_week: document.getElementById("day-select")?.value || "",
-        start_time: document.getElementById("start-time")?.value + ":00" || "",
-        faculty_name: document.getElementById("faculty-name")?.value || "",
-        room_name: document.getElementById("room-name")?.value || "",
-      });
-    });
-  }
+  // Initialize validation with retry mechanism
+  setupValidation();
 
   // Add course conflict detection event listeners
   const courseCodeInput = document.getElementById("course-code");

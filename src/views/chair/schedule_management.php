@@ -990,12 +990,35 @@ if ($userDepartmentId) {
                         <datalist id="course-codes">
                             <?php
                             $curriculumCourses = $jsData['curriculumCourses'] ?? [];
+
+                            // Group by curriculum for logging
+                            $curriculumGroups = [];
+                            foreach ($curriculumCourses as $course) {
+                                $curriculumId = $course['curriculum_id'] ?? 'unknown';
+                                if (!isset($curriculumGroups[$curriculumId])) {
+                                    $curriculumGroups[$curriculumId] = [
+                                        'name' => $course['curriculum_name'] ?? 'Unknown Curriculum',
+                                        'count' => 0
+                                    ];
+                                }
+                                $curriculumGroups[$curriculumId]['count']++;
+                            }
+
+                            // Log the distribution
+                            error_log("Loading course datalist with courses from " . count($curriculumGroups) . " curricula");
+                            foreach ($curriculumGroups as $currId => $info) {
+                                error_log("   - {$info['name']}: {$info['count']} courses");
+                            }
+
                             foreach ($curriculumCourses as $course): ?>
                                 <option value="<?php echo htmlspecialchars($course['course_code']); ?>"
                                     data-name="<?php echo htmlspecialchars($course['course_name']); ?>"
                                     data-year-level="<?php echo htmlspecialchars($course['curriculum_year']); ?>"
-                                    data-course-id="<?php echo htmlspecialchars($course['course_id']); ?>">
-                                <?php endforeach; ?>
+                                    data-course-id="<?php echo htmlspecialchars($course['course_id']); ?>"
+                                    data-curriculum="<?php echo htmlspecialchars($course['curriculum_name'] ?? ''); ?>"
+                                    title="<?php echo htmlspecialchars($course['course_code'] . ' - ' . $course['course_name'] . ' (' . ($course['curriculum_name'] ?? 'Curriculum') . ')'); ?>">
+                                </option>
+                            <?php endforeach; ?>
                         </datalist>
                     </div>
 

@@ -1098,64 +1098,103 @@ class ChairController extends BaseController
         return $courses;
     }
 
-    private function getCurriculumCourses($curriculumId)
+    private function getCurriculumCourses($curriculumId = null)
     {
-        if (!$curriculumId) {
-            error_log("getCurriculumCourses: No curriculum_id provided");
-            return array();
-        }
-
         try {
-            error_log("📚 Getting ALL curriculum courses for curriculum: $curriculumId");
+            $chairId = $_SESSION['user_id'] ?? null;
+            $departmentId = $this->currentDepartmentId ?: $this->getChairDepartment($chairId);
 
-            // FIXED QUERY: Get ALL courses for the curriculum, not filtered by semester
-            $stmt = $this->db->prepare("    
-            SELECT 
-                c.course_id, 
-                c.course_code, 
-                c.course_name,
-                c.units, 
-                c.lecture_units, 
-                c.lab_units, 
-                c.lab_hours, 
-                c.lecture_hours, 
-                cc.subject_type, 
-                cc.year_level AS curriculum_year, 
-                cc.curriculum_id, 
-                cc.semester AS curriculum_semester,
-                cr.curriculum_name
-            FROM curriculum_courses cc 
-            JOIN courses c ON cc.course_id = c.course_id 
-            JOIN curricula cr ON cc.curriculum_id = cr.curriculum_id 
-            WHERE cc.curriculum_id = :curriculum_id 
-            AND cr.status = 'Active' 
-            ORDER BY 
-                FIELD(cc.year_level, '1st Year', '2nd Year', '3rd Year', '4th Year'), 
-                FIELD(cc.semester, '1st', '2nd', 'Mid Year'), 
-                c.course_code
-        ");
-            $stmt->execute(array(
-                ':curriculum_id' => $curriculumId
-            ));
-            $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!$departmentId) {
+                error_log("getCurriculumCourses: No department found for chair");
+                return array();
+            }
 
-            error_log("✅ Found " . count($courses) . " courses for curriculum $curriculumId");
+            // If specific curriculum ID provided, get courses for that curriculum only
+            if ($curriculumId) {
+                error_log("📚 Getting courses for specific curriculum: $curriculumId");
 
-            // Log course distribution by year level
-            $yearLevels = array();
-            foreach ($courses as $course) {
-                $year = $course['curriculum_year'] ?? 'Unknown';
-                if (!isset($yearLevels[$year])) {
-                    $yearLevels[$year] = 0;
+                $stmt = $this->db->prepare("    
+                SELECT 
+                    c.course_id, 
+                    c.course_code, 
+                    c.course_name,
+                    c.units, 
+                    c.lecture_units, 
+                    c.lab_units, 
+                    c.lab_hours, 
+                    c.lecture_hours, 
+                    cc.subject_type, 
+                    cc.year_level AS curriculum_year, 
+                    cc.curriculum_id, 
+                    cc.semester AS curriculum_semester,
+                    cr.curriculum_name,
+                    cr.status as curriculum_status
+                FROM curriculum_courses cc 
+                JOIN courses c ON cc.course_id = c.course_id 
+                JOIN curricula cr ON cc.curriculum_id = cr.curriculum_id 
+                WHERE cc.curriculum_id = :curriculum_id 
+                AND cr.status = 'Active' 
+                ORDER BY 
+                    FIELD(cc.year_level, '1st Year', '2nd Year', '3rd Year', '4th Year'), 
+                    FIELD(cc.semester, '1st', '2nd', 'Mid Year'), 
+                    c.course_code
+            ");
+                $stmt->execute(array(':curriculum_id' => $curriculumId));
+                $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                error_log("✅ Found " . count($courses) . " courses for curriculum $curriculumId");
+                return $courses;
+            } else {
+                // NEW: Get courses from ALL active curricula in the department
+                error_log("📚 Getting ALL courses from ALL active curricula for department: $departmentId");
+
+                $stmt = $this->db->prepare("    
+                SELECT 
+                    c.course_id, 
+                    c.course_code, 
+                    c.course_name,
+                    c.units, 
+                    c.lecture_units, 
+                    c.lab_units, 
+                    c.lab_hours, 
+                    c.lecture_hours, 
+                    cc.subject_type, 
+                    cc.year_level AS curriculum_year, 
+                    cc.curriculum_id, 
+                    cc.semester AS curriculum_semester,
+                    cr.curriculum_name,
+                    cr.status as curriculum_status
+                FROM curriculum_courses cc 
+                JOIN courses c ON cc.course_id = c.course_id 
+                JOIN curricula cr ON cc.curriculum_id = cr.curriculum_id 
+                WHERE cr.department_id = :department_id 
+                AND cr.status = 'Active' 
+                ORDER BY 
+                    cr.curriculum_id,
+                    FIELD(cc.year_level, '1st Year', '2nd Year', '3rd Year', '4th Year'), 
+                    FIELD(cc.semester, '1st', '2nd', 'Mid Year'), 
+                    c.course_code
+            ");
+                $stmt->execute(array(':department_id' => $departmentId));
+                $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Log curriculum distribution
+                $curriculumCounts = [];
+                foreach ($courses as $course) {
+                    $curriculumId = $course['curriculum_id'];
+                    if (!isset($curriculumCounts[$curriculumId])) {
+                        $curriculumCounts[$curriculumId] = 0;
+                    }
+                    $curriculumCounts[$curriculumId]++;
                 }
-                $yearLevels[$year]++;
-            }
 
-            foreach ($yearLevels as $year => $count) {
-                error_log("   - $year: $count courses");
-            }
+                error_log("✅ Found " . count($courses) . " courses from " . count($curriculumCounts) . " active curricula");
+                foreach ($curriculumCounts as $currId => $count) {
+                    error_log("   - Curriculum $currId: $count courses");
+                }
 
-            return $courses;
+                return $courses;
+            }
         } catch (PDOException $e) {
             error_log("❌ getCurriculumCourses: PDO Error - " . $e->getMessage());
             return array();
@@ -2099,12 +2138,29 @@ class ChairController extends BaseController
 
             $sections = $cachedData['sections'];
 
-            // FIX: Load curriculum courses for manual scheduling
+            // FIX: Load curriculum courses for manual scheduling - FROM ALL ACTIVE CURRICULA
             $curriculumCourses = [];
             if (!empty($curricula)) {
-                $firstCurriculumId = $curricula[0]['curriculum_id'];
-                $curriculumCourses = $this->getCurriculumCourses($firstCurriculumId);
-                error_log("manageSchedule: Loaded " . count($curriculumCourses) . " courses for curriculum $firstCurriculumId");
+                // Get courses from ALL active curricula instead of just the first one
+                $curriculumCourses = $this->getCurriculumCourses(); // No parameter = get all active curricula
+                error_log("manageSchedule: Loaded " . count($curriculumCourses) . " courses from ALL active curricula");
+
+                // Log the distribution
+                $curriculumGroups = [];
+                foreach ($curriculumCourses as $course) {
+                    $currId = $course['curriculum_id'];
+                    if (!isset($curriculumGroups[$currId])) {
+                        $curriculumGroups[$currId] = 0;
+                    }
+                    $curriculumGroups[$currId]++;
+                }
+
+                foreach ($curriculumGroups as $currId => $count) {
+                    $currName = $curricula[array_search($currId, array_column($curricula, 'curriculum_id'))]['curriculum_name'] ?? 'Unknown';
+                    error_log("   - Curriculum '$currName' ($currId): $count courses");
+                }
+            } else {
+                error_log("manageSchedule: No curricula found for department");
             }
 
             $jsData = [

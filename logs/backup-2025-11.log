@@ -49,9 +49,6 @@
 [2025-11-03 23:00:03] Backing up table 44/46: users
 [2025-11-03 23:00:03] Backing up table 45/46: vpaa
 [2025-11-03 23:00:03] Backing up table 46/46: vw_subject_types
-PHP Warning:  Undefined array key "Create Table" in C:\Users\alvez\Desktop\acss-1-main\cli\backup-database.php on line 219
-
-Warning: Undefined array key "Create Table" in C:\Users\alvez\Desktop\acss-1-main\cli\backup-database.php on line 219
 [2025-11-03 23:00:03] Writing backup file...
 [2025-11-03 23:00:03] Backup file created: 259.33 KB
 [2025-11-03 23:00:03] Compressing backup...

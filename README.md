@@ -4,13 +4,15 @@ acss-1-main
 ├─ .env
 ├─ backups
 │  ├─ backup_acss1_2025-10-31_15-21-15.sql.zip
-│  └─ backup_acss1_2025-10-31_15-57-27.sql.zip
+│  ├─ backup_acss1_2025-10-31_15-57-27.sql.zip
+│  └─ backup_acss_2025-11-03_23-00-03.sql
 ├─ cli
 │  └─ backup-database.php
 ├─ composer.json
 ├─ composer.lock
 ├─ logs
 │  ├─ backup-2025-10.log
+│  ├─ backup-2025-11.log
 │  └─ scheduler-backup.log
 ├─ package-lock.json
 ├─ package.json
@@ -171,6 +173,7 @@ acss-1-main
 │     └─ public
 │        └─ home.php
 ├─ storage
+│  ├─ backup.lock
 │  └─ scheduler.json
 ├─ tailwind.config.js
 ├─ test_db.php
